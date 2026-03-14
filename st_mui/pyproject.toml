@@ -1,0 +1,16 @@
+# Component metadata picked up by Streamlit at runtime.
+[project]
+name = "st-mui"
+version = "0.1.0"
+
+[[tool.streamlit.component.components]]
+name = "date_picker"
+asset_dir = "date_picker/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "time_picker"
+asset_dir = "time_picker/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "date_time_picker"
+asset_dir = "date_time_picker/frontend/build"

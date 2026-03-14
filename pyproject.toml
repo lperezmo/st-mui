@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "st-mui"
+version = "0.1.0"
+description = "MUI X components for Streamlit, built with Components v2. Includes DatePicker, TimePicker, and DateTimePicker."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Luis" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: User Interfaces",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Framework :: Streamlit",
+    "Environment :: Web Environment",
+]
+keywords = ["streamlit", "mui", "datepicker", "timepicker", "components"]
+dependencies = [
+    "streamlit>=1.51",
+]
+
+[project.urls]
+Homepage = "https://github.com/lperezmo/st-mui"
+Repository = "https://github.com/lperezmo/st-mui"
+Issues = "https://github.com/lperezmo/st-mui/issues"
+
+[tool.setuptools.packages.find]
+include = ["st_mui*"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"st_mui" = ["pyproject.toml"]
+"st_mui.date_picker" = ["frontend/build/**/*"]
+"st_mui.time_picker" = ["frontend/build/**/*"]
+"st_mui.date_time_picker" = ["frontend/build/**/*"]
+
+[tool.ruff]
+extend-exclude = ["references/"]

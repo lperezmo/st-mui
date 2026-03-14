@@ -1,0 +1,35 @@
+{
+  "name": "st-mui-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:dev": "cross-env NODE_ENV=development node build.mjs",
+    "dev": "cross-env NODE_ENV=development node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write src/**/*.{ts,tsx} vite.config.ts"
+  },
+  "dependencies": {
+    "@streamlit/component-v2-lib": "^0.2.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^7.1.0",
+    "@mui/x-date-pickers": "^8.3.0",
+    "@mui/x-data-grid": "^8.3.0",
+    "dayjs": "^1.11.13",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.6",
+    "@vitejs/plugin-react": "^5.1.0",
+    "cross-env": "^10.1.0",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.1.12"
+  }
+}
