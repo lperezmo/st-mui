@@ -5,19 +5,17 @@ on:
     tags: ['v*']
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
-  build-publish:
+  build:
     runs-on: ubuntu-latest
-    environment: pypi
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Build all frontend components
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '22' }
       - run: |
           npm ci
           npm run build
@@ -30,7 +28,23 @@ jobs:
           python -m pip install --upgrade build
           python -m build
 
-      # Publish to PyPI (trusted-publisher flow)
+      - uses: actions/upload-artifact@v6
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
