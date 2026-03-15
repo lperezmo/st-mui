@@ -19,7 +19,7 @@ st.set_page_config(
 
 st.markdown("""<style>
     .block-container {
-        padding-top: 0rem;
+        padding-top: 1rem;
     }
 </style>""", unsafe_allow_html=True)
 
@@ -144,55 +144,51 @@ with tab_time:
 
     # -- 12-hour AM/PM comparison --
     st.markdown("#### 12-hour (AM/PM)")
-    row = st.container(horizontal=True)
 
-    with row:
-        _banner_mui()
-        t_mui1 = time_picker(
-            label="Pick a time",
-            value=time(9, 30),
-            ampm=True,
-            disabled=disabled,
-            key="tp_12h",
-        )
-        st.code(f"Selected: {t_mui1}")
+    _banner_mui()
+    t_mui1 = time_picker(
+        label="Pick a time",
+        value=time(9, 30),
+        ampm=True,
+        disabled=disabled,
+        key="tp_12h",
+    )
+    st.code(f"Selected: {t_mui1}")
 
-    with row:
-        _banner_st()
-        t_st1 = st.time_input(
-            "Pick a time",
-            value=time(9, 30),
-            disabled=disabled,
-            key="st_time_12h",
-        )
-        st.code(f"Selected: {t_st1}")
+    _banner_st()
+    t_st1 = st.time_input(
+        "Pick a time",
+        value=time(9, 30),
+        disabled=disabled,
+        key="st_time_12h",
+    )
+    st.code(f"Selected: {t_st1}")
+
+    st.divider()
 
     # -- 24-hour with bounds comparison --
     st.markdown("#### 24-hour with bounds")
-    row2 = st.container(horizontal=True)
 
-    with row2:
-        _banner_mui()
-        t_mui2 = time_picker(
-            label="Business hours only",
-            value=time(14, 0),
-            ampm=False,
-            min_time=time(8, 0),
-            max_time=time(17, 0),
-            disabled=disabled,
-            key="tp_24h",
-        )
-        st.code(f"Selected: {t_mui2}")
+    _banner_mui()
+    t_mui2 = time_picker(
+        label="Business hours only",
+        value=time(14, 0),
+        ampm=False,
+        min_time=time(8, 0),
+        max_time=time(17, 0),
+        disabled=disabled,
+        key="tp_24h",
+    )
+    st.code(f"Selected: {t_mui2}")
 
-    with row2:
-        _banner_st()
-        t_st2 = st.time_input(
-            "Business hours only",
-            value=time(14, 0),
-            disabled=disabled,
-            key="st_time_24h",
-        )
-        st.code(f"Selected: {t_st2}")
+    _banner_st()
+    t_st2 = st.time_input(
+        "Business hours only",
+        value=time(14, 0),
+        disabled=disabled,
+        key="st_time_24h",
+    )
+    st.code(f"Selected: {t_st2}")
 
     with st.expander("Usage code"):
         st.code(
@@ -222,55 +218,51 @@ with tab_datetime:
 
     # -- Basic --
     st.markdown("#### Basic")
-    row = st.container(horizontal=True)
 
-    with row:
-        _banner_mui()
-        dt_mui1 = date_time_picker(
-            label="Select date & time",
-            value=datetime.now(),
-            disabled=disabled,
-            key="dtp_basic",
-        )
-        st.code(f"Selected: {dt_mui1}")
+    _banner_mui()
+    dt_mui1 = date_time_picker(
+        label="Select date & time",
+        value=datetime.now(),
+        disabled=disabled,
+        key="dtp_basic",
+    )
+    st.code(f"Selected: {dt_mui1}")
 
-    with row:
-        _banner_st()
-        dt_st1 = st.datetime_input(
-            "Select date & time",
-            value=datetime.now(),
-            disabled=disabled,
-            key="st_dt_basic",
-        )
-        st.code(f"Selected: {dt_st1}")
+    _banner_st()
+    dt_st1 = st.datetime_input(
+        "Select date & time",
+        value=datetime.now(),
+        disabled=disabled,
+        key="st_dt_basic",
+    )
+    st.code(f"Selected: {dt_st1}")
+
+    st.divider()
 
     # -- With bounds --
     st.markdown("#### With bounds")
-    row2 = st.container(horizontal=True)
 
-    with row2:
-        _banner_mui()
-        dt_mui2 = date_time_picker(
-            label="Next 7 days only",
-            min_datetime=datetime.now(),
-            max_datetime=datetime.now() + timedelta(days=7),
-            ampm=False,
-            disabled=disabled,
-            key="dtp_bounded",
-        )
-        st.code(f"Selected: {dt_mui2}")
+    _banner_mui()
+    dt_mui2 = date_time_picker(
+        label="Next 7 days only",
+        min_datetime=datetime.now(),
+        max_datetime=datetime.now() + timedelta(days=7),
+        ampm=False,
+        disabled=disabled,
+        key="dtp_bounded",
+    )
+    st.code(f"Selected: {dt_mui2}")
 
-    with row2:
-        _banner_st()
-        dt_st2 = st.datetime_input(
-            "Next 7 days only",
-            value=datetime.now(),
-            min_value=datetime.now(),
-            max_value=datetime.now() + timedelta(days=7),
-            disabled=disabled,
-            key="st_dt_bounded",
-        )
-        st.code(f"Selected: {dt_st2}")
+    _banner_st()
+    dt_st2 = st.datetime_input(
+        "Next 7 days only",
+        value=datetime.now(),
+        min_value=datetime.now(),
+        max_value=datetime.now() + timedelta(days=7),
+        disabled=disabled,
+        key="st_dt_bounded",
+    )
+    st.code(f"Selected: {dt_st2}")
 
     with st.expander("Usage code"):
         st.code(
@@ -300,79 +292,74 @@ with tab_date:
 
     # -- Basic comparison --
     st.markdown("#### Basic")
-    row = st.container(horizontal=True)
 
-    with row:
-        _banner_mui()
-        d_mui1 = date_picker(
-            label="Pick any date",
-            value=date.today(),
-            disabled=disabled,
-            key="dp_basic",
-        )
-        st.code(f"Selected: {d_mui1}")
+    _banner_mui()
+    d_mui1 = date_picker(
+        label="Pick any date",
+        value=date.today(),
+        disabled=disabled,
+        key="dp_basic",
+    )
+    st.code(f"Selected: {d_mui1}")
 
-    with row:
-        _banner_st()
-        d_st1 = st.date_input(
-            "Pick any date",
-            value=date.today(),
-            disabled=disabled,
-            key="st_date_basic",
-        )
-        st.code(f"Selected: {d_st1}")
+    _banner_st()
+    d_st1 = st.date_input(
+        "Pick any date",
+        value=date.today(),
+        disabled=disabled,
+        key="st_date_basic",
+    )
+    st.code(f"Selected: {d_st1}")
+
+    st.divider()
 
     # -- With bounds comparison --
     st.markdown("#### With bounds")
-    row2 = st.container(horizontal=True)
 
-    with row2:
-        _banner_mui()
-        d_mui2 = date_picker(
-            label="This year only",
-            min_date=date(2026, 1, 1),
-            max_date=date(2026, 12, 31),
-            disabled=disabled,
-            key="dp_bounded",
-        )
-        st.code(f"Selected: {d_mui2}")
+    _banner_mui()
+    d_mui2 = date_picker(
+        label="This year only",
+        min_date=date(2026, 1, 1),
+        max_date=date(2026, 12, 31),
+        disabled=disabled,
+        key="dp_bounded",
+    )
+    st.code(f"Selected: {d_mui2}")
 
-    with row2:
-        _banner_st()
-        d_st2 = st.date_input(
-            "This year only",
-            min_value=date(2026, 1, 1),
-            max_value=date(2026, 12, 31),
-            disabled=disabled,
-            key="st_date_bounded",
-        )
-        st.code(f"Selected: {d_st2}")
+    _banner_st()
+    d_st2 = st.date_input(
+        "This year only",
+        min_value=date(2026, 1, 1),
+        max_value=date(2026, 12, 31),
+        disabled=disabled,
+        key="st_date_bounded",
+    )
+    st.code(f"Selected: {d_st2}")
+
+    st.divider()
 
     # -- Custom format --
     st.markdown("#### Custom format")
-    row3 = st.container(horizontal=True)
 
-    with row3:
-        _banner_mui()
-        d_mui3 = date_picker(
-            label="DD/MM/YYYY format",
-            value=date(2026, 3, 14),
-            format="DD/MM/YYYY",
-            disabled=disabled,
-            key="dp_format",
-        )
-        st.code(f"Selected: {d_mui3}")
+    _banner_mui()
+    d_mui3 = date_picker(
+        label="DD/MM/YYYY format",
+        value=date(2026, 3, 14),
+        format="DD/MM/YYYY",
+        disabled=disabled,
+        key="dp_format",
+    )
+    st.code(f"Selected: {d_mui3}")
 
-    with row3:
-        _banner_st()
-        d_st3 = st.date_input(
-            "DD/MM/YYYY format",
-            value=date(2026, 3, 14),
-            format="DD/MM/YYYY",
-            disabled=disabled,
-            key="st_date_format",
-        )
-        st.code(f"Selected: {d_st3}")
+    _banner_st()
+    d_st3 = st.date_input(
+        "DD/MM/YYYY format",
+        value=date(2026, 3, 14),
+        format="DD/MM/YYYY",
+        disabled=disabled,
+        key="st_date_format",
+    )
+    st.code(f"Selected: {d_st3}")
 
     with st.expander("Usage code"):
         st.code(
