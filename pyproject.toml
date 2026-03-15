@@ -45,5 +45,13 @@ include-package-data = true
 "st_mui.time_picker" = ["frontend/build/**/*"]
 "st_mui.date_time_picker" = ["frontend/build/**/*"]
 
+[tool.semantic_release]
+version_toml = [
+    "pyproject.toml:project.version",
+    "st_mui/pyproject.toml:project.version",
+]
+tag_format = "v{version}"
+commit_message = "chore(release): v{version}"
+
 [tool.ruff]
 extend-exclude = ["references/"]

@@ -1,6 +1,5 @@
 import { FC, useCallback, useMemo } from "react";
 import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
-import Box from "@mui/material/Box";
 import {
   DataGrid as MuiDataGrid,
   GridColDef,
@@ -21,7 +20,7 @@ export type DataGridData = {
   pageSize: number;
   checkboxSelection: boolean;
   density: "compact" | "standard" | "comfortable";
-  autoHeight: boolean;
+  height: number;
   disabled: boolean;
 };
 
@@ -34,14 +33,12 @@ type Props = {
 };
 
 const DataGridComponent: FC<Props> = ({ data, setStateValue }) => {
-  const {
-    rows,
-    columns,
-    pageSize,
-    checkboxSelection,
-    density,
-    autoHeight,
-  } = data;
+  const rows = data.rows ?? [];
+  const columns = data.columns ?? [];
+  const pageSize = data.pageSize ?? 10;
+  const checkboxSelection = data.checkboxSelection ?? false;
+  const density = data.density ?? "standard";
+  const height = data.height ?? 400;
 
   const colDefs = useMemo<GridColDef[]>(
     () =>
@@ -52,9 +49,17 @@ const DataGridComponent: FC<Props> = ({ data, setStateValue }) => {
     [columns]
   );
 
+  // Deduplicate page size options
+  const pageSizeOptions = useMemo(
+    () => [...new Set([pageSize, 25, 50, 100])].sort((a, b) => a - b),
+    [pageSize]
+  );
+
   const handleRowSelection = useCallback(
     (model: GridRowSelectionModel) => {
-      setStateValue("selected_rows", [...model.ids] as (string | number)[]);
+      // v8: model is { type: 'include'|'exclude', ids: Set<GridRowId> }
+      const ids = model.ids ? [...model.ids] : [];
+      setStateValue("selected_rows", ids as (string | number)[]);
     },
     [setStateValue]
   );
@@ -74,29 +79,22 @@ const DataGridComponent: FC<Props> = ({ data, setStateValue }) => {
   );
 
   return (
-    <Box sx={{ width: "100%", minHeight: autoHeight ? undefined : 400 }}>
+    <div style={{ width: "100%", height }}>
       <MuiDataGrid
         rows={rows}
         columns={colDefs}
         density={density}
-        autoHeight={autoHeight}
-        pageSizeOptions={[pageSize, 25, 50, 100]}
+        pageSizeOptions={pageSizeOptions}
         initialState={{
-          pagination: { paginationModel: { pageSize } },
+          pagination: { paginationModel: { pageSize, page: 0 } },
         }}
         checkboxSelection={checkboxSelection}
         disableRowSelectionOnClick
         onRowSelectionModelChange={handleRowSelection}
         onSortModelChange={handleSortChange}
         onFilterModelChange={handleFilterChange}
-        sx={{
-          // Ensure proper border rendering in Streamlit context
-          "& .MuiDataGrid-cell": {
-            borderColor: "divider",
-          },
-        }}
       />
-    </Box>
+    </div>
   );
 };
 

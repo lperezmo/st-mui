@@ -10,6 +10,7 @@ _component = st.components.v2.component(
     "st-mui.data_grid",
     js="index-*.js",
     html='<div class="react-root"></div>',
+    isolate_styles=False,
 )
 
 
@@ -17,9 +18,9 @@ def data_grid(
     rows: list[dict[str, Any]] | None = None,
     columns: list[dict[str, Any]] | None = None,
     page_size: int = 10,
+    height: int = 400,
     checkbox_selection: bool = False,
     density: str = "standard",
-    auto_height: bool = True,
     disabled: bool = False,
     on_change: Callable | None = None,
     key: str | None = None,
@@ -35,12 +36,12 @@ def data_grid(
         "field" and "headerName" keys.
     page_size : int
         Number of rows per page.
+    height : int
+        Height of the grid in pixels.
     checkbox_selection : bool
         Enable row selection checkboxes.
     density : str
         Grid density: "compact", "standard", or "comfortable".
-    auto_height : bool
-        Auto-size the grid height to fit content.
     disabled : bool
         Whether the grid is read-only.
     on_change : callable or None
@@ -62,13 +63,14 @@ def data_grid(
     result = _component(
         key=key,
         default=default,
+        height=height,
         data={
             "rows": rows or [],
             "columns": columns or [],
             "pageSize": page_size,
             "checkboxSelection": checkbox_selection,
             "density": density,
-            "autoHeight": auto_height,
+            "height": height,
             "disabled": disabled,
         },
         on_selected_rows_change=on_change or _noop,

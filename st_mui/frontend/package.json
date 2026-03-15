@@ -11,12 +11,14 @@
     "format": "prettier --write src/**/*.{ts,tsx} vite.config.ts"
   },
   "dependencies": {
-    "@streamlit/component-v2-lib": "^0.2.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^7.1.0",
     "@mui/x-date-pickers": "^8.3.0",
-    "@mui/x-data-grid": "^8.3.0",
+    "@mui/x-date-pickers-pro": "^8.27.2",
+    "@mui/x-license": "^8.26.0",
+    "@mui/x-tree-view": "^8.27.2",
+    "@streamlit/component-v2-lib": "^0.2.0",
     "dayjs": "^1.11.13",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

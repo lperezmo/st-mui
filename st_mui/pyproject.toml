@@ -14,3 +14,15 @@ asset_dir = "time_picker/frontend/build"
 [[tool.streamlit.component.components]]
 name = "date_time_picker"
 asset_dir = "date_time_picker/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "date_range_picker"
+asset_dir = "date_range_picker/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "date_time_range_picker"
+asset_dir = "date_time_range_picker/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "tree_view"
+asset_dir = "tree_view/frontend/build"

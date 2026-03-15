@@ -8,7 +8,14 @@ with side-by-side comparisons against standard widgets.
 import streamlit as st
 from datetime import date, time, datetime, timedelta
 
-from st_mui import date_picker, time_picker, date_time_picker
+from st_mui import (
+    date_picker,
+    time_picker,
+    date_time_picker,
+    date_range_picker,
+    date_time_range_picker,
+    tree_view,
+)
 
 # -- Page config -------------------------------------------------------------
 st.set_page_config(
@@ -124,13 +131,18 @@ with st.sidebar:
     st.markdown("- :material/schedule: TimePicker")
     st.markdown("- :material/calendar_month: DateTimePicker")
     st.markdown("- :material/event: DatePicker")
+    st.markdown("- :material/date_range: DateRangePicker (Pro)")
+    st.markdown("- :material/date_range: DateTimeRangePicker (Pro)")
+    st.markdown("- :material/account_tree: TreeView")
 
 # -- Tabs for each component -------------------------------------------------
-tab_time, tab_datetime, tab_date, tab_combined = st.tabs([
+tab_time, tab_datetime, tab_date, tab_daterange, tab_dtrange, tab_tree = st.tabs([
     ":material/schedule: TimePicker",
     ":material/calendar_month: DateTimePicker",
     ":material/event: DatePicker",
-    ":material/groups: Combined Example",
+    ":material/date_range: DateRangePicker",
+    ":material/date_range: DTRangePicker",
+    ":material/account_tree: TreeView",
 ])
 
 # ============================================================================
@@ -392,52 +404,278 @@ selected = date_picker(
         )
 
 # ============================================================================
-# COMBINED EXAMPLE TAB
+# DATE RANGE PICKER TAB
 # ============================================================================
-with tab_combined:
-    st.subheader("Real-world Example: Meeting Scheduler")
+with tab_daterange:
+    st.subheader("DateRangePicker (Pro)")
     st.markdown(
-        "This example combines multiple st-mui components to build "
-        "a simple meeting scheduler interface."
+        "Select a date range with start and end dates. "
+        "This is a MUI X Pro component -- works in evaluation mode without a license key."
     )
 
-    with st.container(border=True):
-        st.markdown("##### :material/event_available: Schedule a Meeting")
+    # -- Basic --
+    st.markdown("#### Basic")
 
-        row = st.container(horizontal=True)
-        with row:
-            meeting_date = date_picker(
-                label="Meeting date",
-                value=date.today() + timedelta(days=1),
-                min_date=date.today(),
-                key="meeting_date",
-            )
-        with row:
-            meeting_time = time_picker(
-                label="Start time",
-                value=time(10, 0),
-                ampm=True,
-                min_time=time(8, 0),
-                max_time=time(18, 0),
-                key="meeting_time",
-            )
+    with st.container(horizontal=True):
+        _banner_mui()
+        dr = date_range_picker(
+            label="Trip dates",
+            value=(date.today(), date.today() + timedelta(days=7)),
+            disabled=disabled,
+            key="drp_basic",
+        )
+        st.code(f"Start: {dr[0]}  End: {dr[1]}")
 
-        meeting_dt_picker = date_time_picker(
-            label="Or pick exact date & time",
-            value=datetime.now() + timedelta(days=1),
-            ampm=True,
-            key="meeting_datetime",
+    with st.container(horizontal=True):
+        _banner_st()
+        dr_st = st.date_input(
+            "Trip dates",
+            value=(date.today(), date.today() + timedelta(days=7)),
+            disabled=disabled,
+            key="st_daterange_basic",
+        )
+        if isinstance(dr_st, tuple) and len(dr_st) == 2:
+            st.code(f"Start: {dr_st[0]}  End: {dr_st[1]}")
+        else:
+            st.code(f"Selected: {dr_st}")
+
+    st.divider()
+
+    # -- With bounds --
+    st.markdown("#### With bounds (this month, single calendar)")
+
+    with st.container(horizontal=True):
+        _banner_mui()
+        dr2 = date_range_picker(
+            label="This month only",
+            min_date=date(2026, 3, 1),
+            max_date=date(2026, 3, 31),
+            calendars=1,
+            disabled=disabled,
+            key="drp_bounded",
+        )
+        st.code(f"Start: {dr2[0]}  End: {dr2[1]}")
+
+    with st.container(horizontal=True):
+        _banner_st()
+        dr2_st = st.date_input(
+            "This month only",
+            value=(date(2026, 3, 1), date(2026, 3, 15)),
+            min_value=date(2026, 3, 1),
+            max_value=date(2026, 3, 31),
+            disabled=disabled,
+            key="st_daterange_bounded",
+        )
+        if isinstance(dr2_st, tuple) and len(dr2_st) == 2:
+            st.code(f"Start: {dr2_st[0]}  End: {dr2_st[1]}")
+        else:
+            st.code(f"Selected: {dr2_st}")
+
+    with st.expander("Usage code"):
+        st.code(
+            '''from st_mui import date_range_picker
+from datetime import date, timedelta
+
+start, end = date_range_picker(
+    label="Trip dates",
+    value=(date.today(), date.today() + timedelta(days=7)),
+    min_date=date(2026, 1, 1),
+    max_date=date(2026, 12, 31),
+    calendars=2,
+    # license_key="YOUR_KEY",  # or set ST_MUI_LICENSE_KEY env var
+    key="my_range",
+)''',
+            language="python",
         )
 
-    if meeting_date and meeting_time:
-        meeting_dt = datetime.combine(meeting_date, meeting_time)
-        st.success(
-            f"Meeting scheduled for **{meeting_dt.strftime('%B %d, %Y at %I:%M %p')}**"
+# ============================================================================
+# DATE TIME RANGE PICKER TAB
+# ============================================================================
+with tab_dtrange:
+    st.subheader("DateTimeRangePicker (Pro)")
+    st.markdown(
+        "Select a datetime range with start and end dates and times. "
+        "This is a MUI X Pro component -- works in evaluation mode without a license key."
+    )
+
+    # -- Basic --
+    st.markdown("#### Basic (AM/PM)")
+
+    with st.container(horizontal=True):
+        _banner_mui()
+        dtr = date_time_range_picker(
+            label="Event",
+            value=(datetime.now(), datetime.now() + timedelta(hours=2)),
+            disabled=disabled,
+            key="dtrp_basic",
+        )
+        st.code(f"Start: {dtr[0]}")
+        st.code(f"End:   {dtr[1]}")
+
+    st.divider()
+
+    # -- 24-hour format --
+    st.markdown("#### 24-hour format")
+
+    with st.container(horizontal=True):
+        _banner_mui()
+        dtr2 = date_time_range_picker(
+            label="Shift schedule",
+            ampm=False,
+            disabled=disabled,
+            key="dtrp_24h",
+        )
+        st.code(f"Start: {dtr2[0]}")
+        st.code(f"End:   {dtr2[1]}")
+
+    with st.expander("Usage code"):
+        st.code(
+            '''from st_mui import date_time_range_picker
+from datetime import datetime, timedelta
+
+start, end = date_time_range_picker(
+    label="Event",
+    value=(datetime.now(), datetime.now() + timedelta(hours=2)),
+    ampm=True,
+    # license_key="YOUR_KEY",  # or set ST_MUI_LICENSE_KEY env var
+    key="my_dt_range",
+)''',
+            language="python",
+        )
+
+# ============================================================================
+# TREE VIEW TAB
+# ============================================================================
+with tab_tree:
+    st.subheader("TreeView")
+    st.markdown(
+        "A hierarchical tree view for displaying nested data. "
+        "Uses MUI X RichTreeView (MIT, free)."
+    )
+
+    # -- Basic --
+    st.markdown("#### File browser")
+
+    _banner_mui()
+
+    file_tree = [
+        {
+            "id": "docs",
+            "label": "Documents",
+            "children": [
+                {"id": "docs-resume", "label": "Resume.pdf"},
+                {"id": "docs-cover", "label": "Cover Letter.docx"},
+                {
+                    "id": "docs-projects",
+                    "label": "Projects",
+                    "children": [
+                        {"id": "docs-proj-a", "label": "ProjectA.zip"},
+                        {"id": "docs-proj-b", "label": "ProjectB.zip"},
+                    ],
+                },
+            ],
+        },
+        {
+            "id": "photos",
+            "label": "Photos",
+            "children": [
+                {"id": "photos-vacation", "label": "vacation.jpg"},
+                {"id": "photos-family", "label": "family.png"},
+            ],
+        },
+        {
+            "id": "music",
+            "label": "Music",
+            "children": [
+                {"id": "music-song1", "label": "song1.mp3"},
+                {"id": "music-song2", "label": "song2.mp3"},
+            ],
+        },
+    ]
+
+    selected = tree_view(
+        items=file_tree,
+        label="My Files",
+        checkbox_selection=True,
+        default_expanded=["docs"],
+        disabled=disabled,
+        key="tv_files",
+    )
+    st.code(f"Selected: {selected}")
+
+    st.divider()
+
+    # -- Multi-select --
+    st.markdown("#### Multi-select with checkboxes")
+
+    _banner_mui()
+
+    org_tree = [
+        {
+            "id": "eng",
+            "label": "Engineering",
+            "children": [
+                {"id": "eng-fe", "label": "Frontend"},
+                {"id": "eng-be", "label": "Backend"},
+                {"id": "eng-infra", "label": "Infrastructure"},
+            ],
+        },
+        {
+            "id": "design",
+            "label": "Design",
+            "children": [
+                {"id": "design-ux", "label": "UX"},
+                {"id": "design-ui", "label": "UI"},
+            ],
+        },
+        {
+            "id": "product",
+            "label": "Product",
+        },
+    ]
+
+    selected2 = tree_view(
+        items=org_tree,
+        label="Select teams",
+        multi_select=True,
+        checkbox_selection=True,
+        default_expanded=["eng", "design"],
+        disabled=disabled,
+        key="tv_org",
+    )
+    st.code(f"Selected teams: {selected2}")
+
+    with st.expander("Usage code"):
+        st.code(
+            '''from st_mui import tree_view
+
+items = [
+    {
+        "id": "docs",
+        "label": "Documents",
+        "children": [
+            {"id": "docs-resume", "label": "Resume.pdf"},
+            {"id": "docs-cover", "label": "Cover Letter.docx"},
+        ],
+    },
+    {"id": "photos", "label": "Photos"},
+]
+
+selected = tree_view(
+    items=items,
+    label="My Files",
+    multi_select=True,
+    checkbox_selection=True,
+    default_expanded=["docs"],
+    key="my_tree",
+)
+''',
+            language="python",
         )
 
 # -- Footer ------------------------------------------------------------------
 st.divider()
 st.caption(
     "Built with [st-mui](https://github.com/lperezmo/st-mui) | "
-    "MUI X (Community, MIT) | Streamlit Components v2"
+    "MUI X (Community + Pro) | Streamlit Components v2"
 )

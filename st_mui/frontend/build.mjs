@@ -16,8 +16,9 @@ const components = [
   { name: "date_picker", entry: "./src/date_picker/index.tsx" },
   { name: "time_picker", entry: "./src/time_picker/index.tsx" },
   { name: "date_time_picker", entry: "./src/date_time_picker/index.tsx" },
-  // DataGrid removed — deferred to future iteration
-  // { name: "data_grid", entry: "./src/data_grid/index.tsx" },
+  { name: "date_range_picker", entry: "./src/date_range_picker/index.tsx" },
+  { name: "date_time_range_picker", entry: "./src/date_time_range_picker/index.tsx" },
+  { name: "tree_view", entry: "./src/tree_view/index.tsx" },
 ];
 
 async function buildComponent(component) {

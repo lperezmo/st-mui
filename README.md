@@ -14,11 +14,16 @@
 
 ## Components
 
-| Component | Description | Standard Streamlit equivalent |
-|-----------|-------------|-------------------------------|
-| `time_picker` | Clock UI, AM/PM toggle, min/max bounds | `st.time_input` (text field only) |
-| `date_time_picker` | Combined date + time in one widget, AM/PM toggle, calendar popover | `st.datetime_input` (text field only) |
-| `date_picker` | Calendar popover with format control | `st.date_input` |
+| Component | Description | License | Streamlit equivalent |
+|-----------|-------------|---------|----------------------|
+| `time_picker` | Clock UI, AM/PM toggle, min/max bounds | MIT | `st.time_input` |
+| `date_time_picker` | Combined date + time, AM/PM toggle, calendar popover | MIT | `st.datetime_input` |
+| `date_picker` | Calendar popover with format control | MIT | `st.date_input` |
+| `date_range_picker` | Date range selection with dual calendars | Pro* | `st.date_input` (range mode) |
+| `date_time_range_picker` | Datetime range with start/end time selection | Pro* | -- |
+| `tree_view` | Hierarchical tree with checkboxes and multi-select | MIT | -- |
+
+*\*Pro components work in evaluation mode without a license key (watermark shown). Set `ST_MUI_LICENSE_KEY` env var or pass `license_key=` to remove it.*
 
 ## Installation
 
@@ -36,26 +41,41 @@ pip install st-mui
 
 ```python
 import streamlit as st
-from datetime import time, datetime, date
-from st_mui import time_picker, date_time_picker, date_picker
-
-t = time_picker(
-    label="Pick a time",
-    value=time(9, 30),
-    ampm=True,
-    key="my_time",
+from datetime import time, datetime, date, timedelta
+from st_mui import (
+    time_picker, date_time_picker, date_picker,
+    date_range_picker, date_time_range_picker,
+    tree_view,
 )
 
-dt = date_time_picker(
-    label="Select date & time",
-    value=datetime.now(),
-    key="my_datetime",
+t = time_picker(label="Pick a time", value=time(9, 30), ampm=True, key="my_time")
+
+dt = date_time_picker(label="Select date & time", value=datetime.now(), key="my_datetime")
+
+d = date_picker(label="Pick a date", value=date.today(), key="my_date")
+
+start, end = date_range_picker(
+    label="Trip dates",
+    value=(date.today(), date.today() + timedelta(days=7)),
+    key="my_range",
 )
 
-d = date_picker(
-    label="Pick a date",
-    value=date.today(),
-    key="my_date",
+start_dt, end_dt = date_time_range_picker(
+    label="Event",
+    value=(datetime.now(), datetime.now() + timedelta(hours=2)),
+    key="my_dt_range",
+)
+
+selected = tree_view(
+    items=[
+        {"id": "docs", "label": "Documents", "children": [
+            {"id": "resume", "label": "Resume.pdf"},
+        ]},
+        {"id": "photos", "label": "Photos"},
+    ],
+    checkbox_selection=True,
+    multi_select=True,
+    key="my_tree",
 )
 ```
 
@@ -104,6 +124,69 @@ date_picker(
     on_change=None,
     key=None,
 ) -> date | None
+```
+
+### `date_range_picker` (Pro)
+
+```python
+date_range_picker(
+    label="Select date range",
+    value=None,           # tuple of (date, date) or (str, str)
+    min_date=None,
+    max_date=None,
+    calendars=2,          # 1 or 2 calendar panels
+    disabled=False,
+    license_key=None,     # or set ST_MUI_LICENSE_KEY env var
+    on_change=None,
+    key=None,
+) -> tuple[date | None, date | None]
+```
+
+### `date_time_range_picker` (Pro)
+
+```python
+date_time_range_picker(
+    label="Select date & time range",
+    value=None,           # tuple of (datetime, datetime) or (str, str)
+    min_datetime=None,
+    max_datetime=None,
+    ampm=True,
+    disabled=False,
+    license_key=None,     # or set ST_MUI_LICENSE_KEY env var
+    on_change=None,
+    key=None,
+) -> tuple[datetime | None, datetime | None]
+```
+
+### `tree_view`
+
+```python
+tree_view(
+    items=None,           # list of {"id", "label", "children": [...]}
+    label=None,
+    multi_select=False,
+    checkbox_selection=True,
+    default_expanded=None,
+    default_selected=None,
+    disabled=False,
+    on_change=None,
+    key=None,
+) -> list[str]  # selected item IDs
+```
+
+## MUI X Pro license
+
+The `date_range_picker` and `date_time_range_picker` use MUI X Pro components. They work in evaluation mode without a license key (a watermark is displayed). To remove the watermark:
+
+```bash
+# Set as environment variable (recommended)
+export ST_MUI_LICENSE_KEY="your-license-key"
+```
+
+Or pass directly:
+
+```python
+date_range_picker(label="Dates", license_key="your-license-key")
 ```
 
 ## Running the example
