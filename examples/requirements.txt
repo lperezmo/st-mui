@@ -1,2 +1,2 @@
 streamlit>=1.55.0
-st-mui>=0.2.5
+st-mui>=0.3.2
