@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.2 (2026-03-15)
+
+### Bug Fixes
+
+- **ci**: Use gh release upload instead of create to avoid duplicate release error
+  ([`1e4e69a`](https://github.com/lperezmo/st-mui/commit/1e4e69aafb5693e12d5af261e8ae87f727e87dc9))
+
+
 ## v0.3.1 (2026-03-15)
 
 
