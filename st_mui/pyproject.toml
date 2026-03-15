@@ -1,7 +1,7 @@
 # Component metadata picked up by Streamlit at runtime.
 [project]
 name = "st-mui"
-version = "0.2.5"
+version = "0.3.0"
 
 [[tool.streamlit.component.components]]
 name = "date_picker"
