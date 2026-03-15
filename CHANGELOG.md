@@ -1,7 +1,19 @@
 # CHANGELOG
 
 
+## v0.3.1 (2026-03-15)
+
+
 ## v0.3.0 (2026-03-15)
+
+### Bug Fixes
+
+- **ci**: Upgrade actions to Node 24 and fix detached HEAD in release workflow
+  ([`76b3183`](https://github.com/lperezmo/st-mui/commit/76b3183653b8d1f88be31a43570e5d53f8eeb6e9))
+
+- Bump checkout, setup-python, setup-node to v6 (Node 24 compatible) - Replace
+  python-semantic-release/publish-action with gh release create to avoid "Detached HEAD state cannot
+  match any release groups" error
 
 ### Features
 
