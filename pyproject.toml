@@ -44,6 +44,9 @@ include-package-data = true
 "st_mui.date_picker" = ["frontend/build/**/*"]
 "st_mui.time_picker" = ["frontend/build/**/*"]
 "st_mui.date_time_picker" = ["frontend/build/**/*"]
+"st_mui.date_range_picker" = ["frontend/build/**/*"]
+"st_mui.date_time_range_picker" = ["frontend/build/**/*"]
+"st_mui.tree_view" = ["frontend/build/**/*"]
 
 [tool.semantic_release]
 version_toml = [
