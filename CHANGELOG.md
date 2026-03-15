@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.3.3 (2026-03-15)
+
+### Bug Fixes
+
+- Include new component build assets in package data
+  ([`121faf7`](https://github.com/lperezmo/st-mui/commit/121faf767f4e49159f6d40e1bb7893c39effdd7a))
+
+DateRangePicker, DateTimeRangePicker, and TreeView frontend builds were missing from setuptools
+  package-data, causing import errors. Example app requirements updated
+
+### Chores
+
+- Update example app requirements
+  ([`3d4da6d`](https://github.com/lperezmo/st-mui/commit/3d4da6d5e12dd551f467f7665ccb036cd5b6b4b9))
+
+
 ## v0.3.2 (2026-03-15)
 
 ### Bug Fixes
