@@ -17,6 +17,12 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown("""<style>
+    .block-container {
+        padding-top: 0rem;
+    }
+</style>""", unsafe_allow_html=True)
+
 # -- Helpers: branded column banners -----------------------------------------
 _IS_DARK = st.context.theme.type == "dark"
 
@@ -138,9 +144,9 @@ with tab_time:
 
     # -- 12-hour AM/PM comparison --
     st.markdown("#### 12-hour (AM/PM)")
-    col_mui, col_st = st.columns(2)
+    row = st.container(horizontal=True)
 
-    with col_mui:
+    with row:
         _banner_mui()
         t_mui1 = time_picker(
             label="Pick a time",
@@ -151,7 +157,7 @@ with tab_time:
         )
         st.code(f"Selected: {t_mui1}")
 
-    with col_st:
+    with row:
         _banner_st()
         t_st1 = st.time_input(
             "Pick a time",
@@ -163,9 +169,9 @@ with tab_time:
 
     # -- 24-hour with bounds comparison --
     st.markdown("#### 24-hour with bounds")
-    col_mui2, col_st2 = st.columns(2)
+    row2 = st.container(horizontal=True)
 
-    with col_mui2:
+    with row2:
         _banner_mui()
         t_mui2 = time_picker(
             label="Business hours only",
@@ -178,7 +184,7 @@ with tab_time:
         )
         st.code(f"Selected: {t_mui2}")
 
-    with col_st2:
+    with row2:
         _banner_st()
         t_st2 = st.time_input(
             "Business hours only",
@@ -216,9 +222,9 @@ with tab_datetime:
 
     # -- Basic --
     st.markdown("#### Basic")
-    col_mui, col_st = st.columns(2)
+    row = st.container(horizontal=True)
 
-    with col_mui:
+    with row:
         _banner_mui()
         dt_mui1 = date_time_picker(
             label="Select date & time",
@@ -228,7 +234,7 @@ with tab_datetime:
         )
         st.code(f"Selected: {dt_mui1}")
 
-    with col_st:
+    with row:
         _banner_st()
         dt_st1 = st.datetime_input(
             "Select date & time",
@@ -240,9 +246,9 @@ with tab_datetime:
 
     # -- With bounds --
     st.markdown("#### With bounds")
-    col_mui2, col_st2 = st.columns(2)
+    row2 = st.container(horizontal=True)
 
-    with col_mui2:
+    with row2:
         _banner_mui()
         dt_mui2 = date_time_picker(
             label="Next 7 days only",
@@ -254,7 +260,7 @@ with tab_datetime:
         )
         st.code(f"Selected: {dt_mui2}")
 
-    with col_st2:
+    with row2:
         _banner_st()
         dt_st2 = st.datetime_input(
             "Next 7 days only",
@@ -294,9 +300,9 @@ with tab_date:
 
     # -- Basic comparison --
     st.markdown("#### Basic")
-    col_mui, col_st = st.columns(2)
+    row = st.container(horizontal=True)
 
-    with col_mui:
+    with row:
         _banner_mui()
         d_mui1 = date_picker(
             label="Pick any date",
@@ -306,7 +312,7 @@ with tab_date:
         )
         st.code(f"Selected: {d_mui1}")
 
-    with col_st:
+    with row:
         _banner_st()
         d_st1 = st.date_input(
             "Pick any date",
@@ -318,9 +324,9 @@ with tab_date:
 
     # -- With bounds comparison --
     st.markdown("#### With bounds")
-    col_mui2, col_st2 = st.columns(2)
+    row2 = st.container(horizontal=True)
 
-    with col_mui2:
+    with row2:
         _banner_mui()
         d_mui2 = date_picker(
             label="This year only",
@@ -331,7 +337,7 @@ with tab_date:
         )
         st.code(f"Selected: {d_mui2}")
 
-    with col_st2:
+    with row2:
         _banner_st()
         d_st2 = st.date_input(
             "This year only",
@@ -344,9 +350,9 @@ with tab_date:
 
     # -- Custom format --
     st.markdown("#### Custom format")
-    col_mui3, col_st3 = st.columns(2)
+    row3 = st.container(horizontal=True)
 
-    with col_mui3:
+    with row3:
         _banner_mui()
         d_mui3 = date_picker(
             label="DD/MM/YYYY format",
@@ -357,7 +363,7 @@ with tab_date:
         )
         st.code(f"Selected: {d_mui3}")
 
-    with col_st3:
+    with row3:
         _banner_st()
         d_st3 = st.date_input(
             "DD/MM/YYYY format",
@@ -397,15 +403,15 @@ with tab_combined:
     with st.container(border=True):
         st.markdown("##### :material/event_available: Schedule a Meeting")
 
-        mcol1, mcol2 = st.columns(2)
-        with mcol1:
+        row = st.container(horizontal=True)
+        with row:
             meeting_date = date_picker(
                 label="Meeting date",
                 value=date.today() + timedelta(days=1),
                 min_date=date.today(),
                 key="meeting_date",
             )
-        with mcol2:
+        with row:
             meeting_time = time_picker(
                 label="Start time",
                 value=time(10, 0),
