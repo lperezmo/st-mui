@@ -52,11 +52,11 @@ jobs:
           python -m pip install --upgrade build
           python -m build
 
-      # Create GitHub Release with auto-generated notes
-      - name: Create GitHub Release
+      # Upload dists to the GitHub Release that semantic-release already created
+      - name: Upload assets to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${{ needs.release.outputs.tag }}" dist/* --generate-notes
+        run: gh release upload "${{ needs.release.outputs.tag }}" dist/* --clobber
 
       # Publish to PyPI
       - name: Publish to PyPI
