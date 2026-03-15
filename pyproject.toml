@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "st-mui"
-version = "0.2.4"
+version = "0.2.5"
 description = "MUI X components for Streamlit, built with Components v2. Includes DatePicker, TimePicker, and DateTimePicker."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,7 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
-    "Framework :: Streamlit",
     "Environment :: Web Environment",
 ]
 keywords = ["streamlit", "mui", "datepicker", "timepicker", "components"]
