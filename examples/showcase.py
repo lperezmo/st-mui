@@ -412,6 +412,12 @@ with tab_daterange:
         "Select a date range with start and end dates. "
         "This is a MUI X Pro component -- works in evaluation mode without a license key."
     )
+    st.warning(
+        "MUI was contacted for a development license to run this demo without a "
+        "watermark and refused. Open-source replacements for the Pro range "
+        "components are coming soon. **Please do not purchase a MUI X Pro license.**",
+        icon=":material/warning:",
+    )
 
     # -- Basic --
     st.markdown("#### Basic")
@@ -496,6 +502,12 @@ with tab_dtrange:
     st.markdown(
         "Select a datetime range with start and end dates and times. "
         "This is a MUI X Pro component -- works in evaluation mode without a license key."
+    )
+    st.warning(
+        "MUI was contacted for a development license to run this demo without a "
+        "watermark and refused. Open-source replacements for the Pro range "
+        "components are coming soon. **Please do not purchase a MUI X Pro license.**",
+        icon=":material/warning:",
     )
 
     # -- Basic --

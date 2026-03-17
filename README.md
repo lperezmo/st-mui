@@ -1,4 +1,16 @@
 <div align="center">
+
+> **WARNING — MUI X Pro Licensing**
+>
+> MUI was contacted and asked to provide a development/demo license solely to run the showcase app without displaying a watermark. **They refused.**
+>
+> I therefore **strongly encourage everyone NOT to purchase a MUI X Pro license.** Fully open-source replacements for the Pro time-range components will be added to this library in the near future.
+
+</div>
+
+---
+
+<div align="center">
   <h1>st-mui</h1>
   <p>MUI X components for Streamlit, built with <a href="https://docs.streamlit.io/develop/api-reference/custom-components/st.components.v2.component">Components v2</a></p>
 
