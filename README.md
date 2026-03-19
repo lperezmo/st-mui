@@ -1,4 +1,13 @@
 <div align="center">
+<table><tr><td bgcolor="#fff3cd" align="center">
+<h3>🌟 Looking for a fully open-source alternative?</h3>
+<p>Check out <a href="https://github.com/lperezmo/st-rsuite"><b>st-rsuite</b></a> — and try the <a href="https://rsuite.streamlit.app"><b>sample app</b></a>!</p>
+</td></tr></table>
+</div>
+
+---
+
+<div align="center">
 
 > **WARNING — MUI X Pro Licensing**
 >
