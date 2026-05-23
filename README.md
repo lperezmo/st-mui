@@ -28,7 +28,7 @@
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%E2%89%A53.10-blue" alt="Python ≥3.10"></a>
   <a href="https://github.com/lperezmo/st-mui/blob/main/LICENSE"><img src="https://img.shields.io/github/license/lperezmo/st-mui" alt="License"></a>
   <br>
-  <a href="https://st-mui.streamlit.app/"><img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit"></a>
+  <a href="https://st-mui.streamlit.app/"><img src="https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white" alt="Open in Streamlit"></a>
 </div>
 
 ---
