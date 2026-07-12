@@ -6,9 +6,10 @@ This mirrors what the Streamlit runtime does at startup: it calls
 then resolves each component's ``asset_dir``. If discovery does not register a
 component, a real app raises
 ``Component 'st-mui.<name>' must be declared in pyproject.toml with asset_dir``.
-We assert each of the six registrations resolves and that the installed
-Streamlit lets the compat layer disable style isolation (at registration on
-Streamlit >= 1.53, or on the per-call renderer on 1.51 / 1.52).
+We assert each of the six registrations resolves, that ``import st_mui`` is
+safe outside a running app (registration is deferred to first use), and that
+the installed Streamlit lets the compat layer disable style isolation (at
+registration on Streamlit >= 1.53, or on the per-call renderer on 1.51 / 1.52).
 
 This is intentionally cheap (no server, no browser) so CI can run it across the
 whole Streamlit version matrix. Note: ``streamlit.testing.v1.AppTest`` is NOT a
@@ -36,12 +37,13 @@ COMPONENTS = [
 ]
 
 
-def test_import_exports_every_component():
-    """Importing st_mui registers all six components without raising. On
-    Streamlit 1.51 / 1.52 a registration-level isolate_styles kwarg would make
-    this fail with a TypeError; the compat shim is what keeps it working."""
+def test_import_is_lazy_and_exports_every_component():
+    """``import st_mui`` must not register anything (file-backed registration
+    needs runtime discovery, so an eager import would raise outside a real
+    ``streamlit run``), yet every component must be reachable via PEP 562."""
+    assert sorted(st_mui.__all__) == sorted(COMPONENTS)
     for name in COMPONENTS:
-        assert callable(getattr(st_mui, name)), f"st_mui.{name} is not exported"
+        assert name in st_mui._COMPONENT_IMPORTS, f"{name} missing from lazy imports"
 
 
 def test_isolate_styles_controllable():
@@ -51,8 +53,7 @@ def test_isolate_styles_controllable():
     those places on the installed Streamlit."""
     if _compat._REGISTRATION_TAKES_ISOLATE_STYLES:
         assert (
-            "isolate_styles"
-            in inspect.signature(st.components.v2.component).parameters
+            "isolate_styles" in inspect.signature(st.components.v2.component).parameters
         )
     else:
         probe = st.components.v2.component(
@@ -66,7 +67,8 @@ def test_isolate_styles_controllable():
 
 def test_compat_shim_registers_without_error():
     """The compat shim registers a component without raising on the installed
-    Streamlit version (covers both the >=1.53 and 1.51/1.52 branches)."""
+    Streamlit version (covers both the >=1.53 and 1.51/1.52 branches). Inline
+    js/html so no asset_dir is needed outside a running app."""
     renderer = _compat.component(
         "probe.compat", html="<div></div>", css="", js="console.log(0)"
     )
@@ -88,3 +90,41 @@ def test_discovery_registers_every_component():
             f"{st.__version__}; a real app would raise 'must be declared ... "
             "with asset_dir' for it"
         )
+
+
+def test_every_component_registers_its_own_name():
+    """Each component module must register its manifest-qualified name through
+    the compat shim and expose a callable of the same name.
+
+    File-backed registration raises outside a real ``streamlit run`` (pytest
+    never runs asset discovery), so the shim is stubbed BEFORE each module
+    imports; the modules then register against the stub.
+    """
+    import importlib
+    import sys
+    from unittest.mock import patch
+
+    registered: list[str] = []
+
+    def fake_registration(name, **kwargs):
+        registered.append(name)
+        assert kwargs.get("js") == "index-*.js", f"{name} changed the js glob"
+
+        def render(**call_kwargs):
+            return call_kwargs.get("default")
+
+        return render
+
+    # Force a clean import of the component modules so they register against
+    # the stub, whatever ran earlier in the session.
+    for mod in [f"st_mui.{c}" for c in COMPONENTS]:
+        sys.modules.pop(mod, None)
+
+    with patch.object(_compat, "component", fake_registration):
+        for name in COMPONENTS:
+            registered.clear()
+            module = importlib.import_module(f"st_mui.{name}")
+            assert registered == [f"st-mui.{name}"], (
+                f"st_mui.{name} registered {registered} instead of st-mui.{name}"
+            )
+            assert callable(getattr(module, name)), f"{name} export is not callable"
