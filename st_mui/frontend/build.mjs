@@ -35,7 +35,9 @@ async function buildComponent(component) {
       ),
     },
     build: {
-      minify: isProd ? "esbuild" : false,
+      // Vite 8 minifies with oxc (Rolldown); the old "esbuild" value now
+      // requires esbuild as a separate install and is deprecated.
+      minify: isProd,
       outDir,
       emptyOutDir: true,
       sourcemap: !isProd,
@@ -46,14 +48,6 @@ async function buildComponent(component) {
         formats: ["es"],
         fileName: "index-[hash]",
       },
-      ...(isProd && {
-        esbuild: {
-          drop: ["console", "debugger"],
-          minifyIdentifiers: true,
-          minifySyntax: true,
-          minifyWhitespace: true,
-        },
-      }),
     },
     logLevel: "info",
   });
