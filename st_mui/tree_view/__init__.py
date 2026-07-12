@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-import streamlit as st
+from st_mui._compat import component
 
-_component = st.components.v2.component(
+_component = component(
     "st-mui.tree_view",
     js="index-*.js",
     html='<div class="react-root"></div>',
-    isolate_styles=False,
 )
 
 
