@@ -1,6 +1,23 @@
 # CHANGELOG
 
 
+## v0.3.5 (2026-07-12)
+
+### Bug Fixes
+
+- Ship minified production bundles without sourcemaps
+  ([`025b1f1`](https://github.com/lperezmo/st-mui/commit/025b1f1f3cd7d5c3dd89c2256d240676e5f59c7c))
+
+build.mjs treated production as opt-in (NODE_ENV === "production"), but neither publish workflow
+  sets NODE_ENV, so every wheel since 0.1.0 has shipped unminified bundles plus sourcemaps (~2.1 MB
+  + ~3.9 MB per component instead of ~0.8 MB). Default to production and reserve dev output for the
+  build:dev / dev scripts, which set NODE_ENV=development.
+
+Adds scripts/assert_prod_build.sh (ported from st-rsuite) and runs it in both publish workflows so a
+  dev build can never ship again: the 1.2 MB per-file limit sits between the largest prod bundle
+  (0.83 MB) and the smallest dev bundle (1.4 MB), and any .js.map fails the check.
+
+
 ## v0.3.4 (2026-07-12)
 
 ### Bug Fixes
