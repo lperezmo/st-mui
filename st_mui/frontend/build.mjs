@@ -9,7 +9,10 @@ import { fileURLToPath } from "node:url";
 import process from "node:process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const isProd = process.env.NODE_ENV === "production";
+// Production is the default so a plain `npm run build` (what CI runs when
+// packaging the wheel) minifies and skips sourcemaps. Development builds opt in
+// via `npm run build:dev` / `npm run dev`, which set NODE_ENV=development.
+const isProd = process.env.NODE_ENV !== "development";
 const isWatch = process.argv.includes("--watch");
 
 const components = [
