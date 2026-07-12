@@ -1,6 +1,9 @@
 # CHANGELOG
 
 
+## v0.3.6 (2026-07-12)
+
+
 ## v0.3.5 (2026-07-12)
 
 ### Bug Fixes
@@ -22,6 +25,19 @@ Adds scripts/assert_prod_build.sh (ported from st-rsuite) and runs it in both pu
 
 ### Bug Fixes
 
+- Defer component registration until first use
+  ([`d1297c4`](https://github.com/lperezmo/st-mui/commit/d1297c4347daacd6c579a4ed46f9dc8ec841a4f3))
+
+Importing st_mui eagerly registered all six file-backed components, and registration requires the
+  Streamlit runtime's manifest discovery to have run, so import st_mui raised StreamlitAPIException
+  in any bare Python context (pytest, REPL, tooling) on every Streamlit version. Defer the component
+  imports via PEP 562 module __getattr__ (same pattern as st-rsuite); registration now happens on
+  first use inside a running app.
+
+Extends the registration smoke test to guard laziness and per-module registration names, and adds a
+  Tests workflow: frontend typecheck, a production-asserted frontend build, and the smoke suite
+  across Streamlit 1.51 through latest. Verified locally on 1.51, 1.52, 1.55, and 1.59.
+
 - Remove broken data_grid stub
   ([`6044610`](https://github.com/lperezmo/st-mui/commit/60446102eba1737fe10e7142768d977a966e3a7f))
 
@@ -35,6 +51,18 @@ The data_grid module registered a file-backed CCv2 component with no frontend so
 
 The TSX imports @mui/x-data-grid, which is not a dependency, so it fails typecheck; build.mjs never
   built it either.
+
+- Support Streamlit 1.51 and 1.52 via isolate_styles compat shim
+  ([`987603e`](https://github.com/lperezmo/st-mui/commit/987603eaed09885cc0939e245c16859f64b6ae23))
+
+All six components passed isolate_styles=False to st.components.v2.component(), which only accepts
+  it from Streamlit 1.53. On 1.51 and 1.52 (the declared floor is >=1.51) importing st_mui raised a
+  TypeError. The new st_mui._compat.component() registers the component and applies
+  isolate_styles=False wherever the installed Streamlit expects it: at registration on >=1.53, on
+  the per-call renderer on 1.51/1.52. Ported from st-rsuite, which shipped the same fix in 0.3.4.
+
+Adds a browser-less registration smoke test that guards the shim, the package import, and CCv2
+  manifest discovery.
 
 ### Chores
 
