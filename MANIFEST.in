@@ -1,4 +1,11 @@
 recursive-include st_mui/date_picker/frontend/build *
 recursive-include st_mui/time_picker/frontend/build *
 recursive-include st_mui/date_time_picker/frontend/build *
+recursive-include st_mui/date_range_picker/frontend/build *
+recursive-include st_mui/date_time_range_picker/frontend/build *
+recursive-include st_mui/tree_view/frontend/build *
+recursive-include st_mui/autocomplete/frontend/build *
+recursive-include st_mui/slider/frontend/build *
+recursive-include st_mui/rating/frontend/build *
+recursive-include st_mui/data_grid/frontend/build *
 include st_mui/pyproject.toml

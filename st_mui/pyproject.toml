@@ -26,3 +26,19 @@ asset_dir = "date_time_range_picker/frontend/build"
 [[tool.streamlit.component.components]]
 name = "tree_view"
 asset_dir = "tree_view/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "autocomplete"
+asset_dir = "autocomplete/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "slider"
+asset_dir = "slider/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "rating"
+asset_dir = "rating/frontend/build"
+
+[[tool.streamlit.component.components]]
+name = "data_grid"
+asset_dir = "data_grid/frontend/build"

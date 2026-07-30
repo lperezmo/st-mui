@@ -21,7 +21,7 @@
 
 <div align="center">
   <h1>st-mui</h1>
-  <p>MUI X components for Streamlit, built with <a href="https://docs.streamlit.io/develop/api-reference/custom-components/st.components.v2.component">Components v2</a></p>
+  <p>Material UI and MUI X components for Streamlit, built with <a href="https://docs.streamlit.io/develop/api-reference/custom-components/st.components.v2.component">Components v2</a></p>
 
   <a href="https://pypi.org/project/st-mui/"><img src="https://img.shields.io/pypi/v/st-mui" alt="PyPI version"></a>
   <a href="https://pypistats.org/packages/st-mui"><img src="https://img.shields.io/pypi/dm/st-mui" alt="Downloads"></a>
@@ -43,6 +43,10 @@
 | `date_range_picker` | Date range selection with dual calendars | Pro* | `st.date_input` (range mode) |
 | `date_time_range_picker` | Datetime range with start/end time selection | Pro* | -- |
 | `tree_view` | Hierarchical tree with checkboxes and multi-select | MIT | -- |
+| `autocomplete` | Searchable single/multi-select and free-form entry | MIT | `st.selectbox` / `st.multiselect` |
+| `slider` | Numeric single-value and range slider with marks | MIT | `st.slider` |
+| `rating` | Accessible star rating with fractional precision | MIT | -- |
+| `data_grid` | Sortable, filterable, pageable Community Data Grid | MIT | `st.dataframe` |
 
 *\*Pro components work in evaluation mode without a license key (watermark shown). Set `ST_MUI_LICENSE_KEY` env var or pass `license_key=` to remove it.*
 
@@ -66,7 +70,7 @@ from datetime import time, datetime, date, timedelta
 from st_mui import (
     time_picker, date_time_picker, date_picker,
     date_range_picker, date_time_range_picker,
-    tree_view,
+    tree_view, autocomplete, slider, rating, data_grid,
 )
 
 t = time_picker(label="Pick a time", value=time(9, 30), ampm=True, key="my_time")
@@ -98,6 +102,25 @@ selected = tree_view(
     multi_select=True,
     key="my_tree",
 )
+
+destination = autocomplete(
+    [{"label": "Los Angeles", "value": "LAX"}, "Other"],
+    label="Destination",
+    key="destination",
+)
+
+price_range = slider(
+    "Price range", value=(20, 80), min_value=0, max_value=100, key="price"
+)
+
+score = rating("Score", value=4.5, precision=0.5, key="score")
+
+grid_state = data_grid(
+    rows=[{"id": 1, "name": "Ada"}, {"id": 2, "name": "Grace"}],
+    columns=["name"],
+    checkbox_selection=True,
+    key="people",
+)
 ```
 
 ## Behavior notes
@@ -110,6 +133,19 @@ selected = tree_view(
 - The range picker `on_change` callback runs once when either the start or end
   value changes.
 - `tree_view(disabled=True)` disables selection and expansion for every item.
+- `autocomplete` values are JSON-safe strings, numbers, or booleans. Dictionary
+  options let display labels differ from returned values. Integer values must
+  fit JavaScript's exact integer range.
+- A two-item `slider` value enables range mode. Slider state is committed when
+  the drag ends rather than on every pixel moved. With `step=None`, provide a
+  non-empty marks list and use marked values for the initial selection.
+  `marks=True` is capped at 1,000 generated marks; use explicit marks for
+  larger numeric ranges.
+- `rating` precision must be from `0.01` through `1`, divide one star into an
+  integer number of steps, and align with the selected value.
+- `data_grid` uses the MIT Community package only. Its single `on_change`
+  callback covers selection, sorting, filtering, and pagination. Community
+  pagination is limited to 100 rows per page.
 
 ## API
 
@@ -205,6 +241,83 @@ tree_view(
     key=None,
 ) -> list[str]  # selected item IDs
 ```
+
+### `autocomplete`
+
+```python
+autocomplete(
+    options=None,        # scalars or {"label", "value", "disabled"} mappings
+    label="Select an option",
+    value=None,
+    multiple=False,
+    free_solo=False,
+    placeholder=None,
+    helper_text=None,
+    clearable=True,
+    disabled=False,
+    on_change=None,
+    key=None,
+) -> str | int | float | bool | list | None
+```
+
+### `slider`
+
+```python
+slider(
+    label="Select a value",
+    value=None,          # number or two-number sequence for range mode
+    min_value=0,
+    max_value=100,
+    step=1,             # None enables marks-only selection
+    marks=False,        # bool or [{"value": 0, "label": "Low"}, ...]
+    value_label_display="auto",
+    disabled=False,
+    on_change=None,
+    key=None,
+) -> int | float | tuple[int | float, int | float]
+```
+
+### `rating`
+
+```python
+rating(
+    label="Rating",
+    value=None,
+    max_value=5,         # integer from 1 through 100
+    precision=1.0,       # 1/n from 0.01 through 1; value must align
+    size="medium",      # "small", "medium", or "large"
+    disabled=False,
+    read_only=False,
+    clearable=True,
+    on_change=None,
+    key=None,
+) -> float | None
+```
+
+### `data_grid` (Community)
+
+```python
+data_grid(
+    rows=None,           # records or a DataFrame containing the id field
+    columns=None,        # field names or supported column mappings
+    id_field="id",
+    selected_rows=None,
+    sort_model=None,
+    filter_model=None,
+    page_size=10,        # Community edition maximum: 100
+    page_size_options=(10, 25, 50, 100),
+    height=400,
+    checkbox_selection=False,
+    density="standard",
+    disabled=False,
+    on_change=None,
+    key=None,
+) -> dict  # selection, sort, filter, and pagination models
+```
+
+The Community Data Grid supports JSON-safe rows, unique string/numeric row IDs,
+column types `string`, `number`, `boolean`, and `singleSelect`, plus Pythonic
+column aliases such as `header_name`, `min_width`, and `value_options`.
 
 ## MUI X Pro license
 

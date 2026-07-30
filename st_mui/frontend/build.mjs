@@ -20,8 +20,15 @@ const components = [
   { name: "time_picker", entry: "./src/time_picker/index.tsx" },
   { name: "date_time_picker", entry: "./src/date_time_picker/index.tsx" },
   { name: "date_range_picker", entry: "./src/date_range_picker/index.tsx" },
-  { name: "date_time_range_picker", entry: "./src/date_time_range_picker/index.tsx" },
+  {
+    name: "date_time_range_picker",
+    entry: "./src/date_time_range_picker/index.tsx",
+  },
   { name: "tree_view", entry: "./src/tree_view/index.tsx" },
+  { name: "autocomplete", entry: "./src/autocomplete/index.tsx" },
+  { name: "slider", entry: "./src/slider/index.tsx" },
+  { name: "rating", entry: "./src/rating/index.tsx" },
+  { name: "data_grid", entry: "./src/data_grid/index.tsx" },
 ];
 
 async function buildComponent(component) {
@@ -34,7 +41,7 @@ async function buildComponent(component) {
     plugins: [react()],
     define: {
       "process.env.NODE_ENV": JSON.stringify(
-        process.env.NODE_ENV || "production"
+        process.env.NODE_ENV || "production",
       ),
     },
     build: {

@@ -1,4 +1,4 @@
-"""st-mui: MUI X components for Streamlit, built with Components v2."""
+"""st-mui: Material UI and MUI X components for Streamlit."""
 
 # Component modules register a file-backed CCv2 component the moment they are
 # imported, and registration needs the Streamlit runtime's manifest discovery
@@ -12,6 +12,10 @@ _COMPONENT_IMPORTS = {
     "date_range_picker": "st_mui.date_range_picker",
     "date_time_range_picker": "st_mui.date_time_range_picker",
     "tree_view": "st_mui.tree_view",
+    "autocomplete": "st_mui.autocomplete",
+    "slider": "st_mui.slider",
+    "rating": "st_mui.rating",
+    "data_grid": "st_mui.data_grid",
 }
 
 
@@ -35,4 +39,8 @@ __all__ = [
     "date_range_picker",
     "date_time_range_picker",
     "tree_view",
+    "autocomplete",
+    "slider",
+    "rating",
+    "data_grid",
 ]
