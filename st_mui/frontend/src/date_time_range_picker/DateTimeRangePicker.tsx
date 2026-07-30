@@ -7,10 +7,15 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimeRangePicker as MuiDateTimeRangePicker } from "@mui/x-date-pickers-pro/DateTimeRangePicker";
 import { DateRange } from "@mui/x-date-pickers-pro/models";
 import { applyMuiLicense } from "../shared/license";
+import { serializeWallClockDateTime } from "../shared/datetime";
 
 export type DateTimeRangePickerState = {
   start_datetime: string | null;
   end_datetime: string | null;
+  range: {
+    start_datetime: string | null;
+    end_datetime: string | null;
+  };
 };
 
 export type DateTimeRangePickerData = {
@@ -30,9 +35,34 @@ type Props = {
     DateTimeRangePickerState,
     DateTimeRangePickerData
   >["setStateValue"];
+  setTriggerValue: FrontendRendererArgs<
+    DateTimeRangePickerState,
+    DateTimeRangePickerData
+  >["setTriggerValue"];
 };
 
-const DateTimeRangePickerComponent: FC<Props> = ({ data, setStateValue }) => {
+export function updateDateTimeRangeState(
+  newValue: DateRange<Dayjs>,
+  setStateValue: Props["setStateValue"],
+  setTriggerValue: Props["setTriggerValue"],
+): void {
+  const [start, end] = newValue;
+  const startValue = serializeWallClockDateTime(start);
+  const endValue = serializeWallClockDateTime(end);
+
+  setStateValue("start_datetime", startValue);
+  setStateValue("end_datetime", endValue);
+  setTriggerValue("range", {
+    start_datetime: startValue,
+    end_datetime: endValue,
+  });
+}
+
+const DateTimeRangePickerComponent: FC<Props> = ({
+  data,
+  setStateValue,
+  setTriggerValue,
+}) => {
   const {
     label,
     startValue,
@@ -51,40 +81,35 @@ const DateTimeRangePickerComponent: FC<Props> = ({ data, setStateValue }) => {
       startValue ? dayjs(startValue) : null,
       endValue ? dayjs(endValue) : null,
     ],
-    [startValue, endValue]
+    [startValue, endValue],
   );
   const [selected, setSelected] = useState<DateRange<Dayjs>>(initialValue);
 
   const handleChange = useCallback(
     (newValue: DateRange<Dayjs>) => {
       setSelected(newValue);
-      const [start, end] = newValue;
-      setStateValue(
-        "start_datetime",
-        start?.isValid() ? start.toISOString() : null
-      );
-      setStateValue(
-        "end_datetime",
-        end?.isValid() ? end.toISOString() : null
-      );
+      updateDateTimeRangeState(newValue, setStateValue, setTriggerValue);
     },
-    [setStateValue]
+    [setStateValue, setTriggerValue],
   );
 
   const minDayjs = useMemo(
     () => (minDatetime ? dayjs(minDatetime) : undefined),
-    [minDatetime]
+    [minDatetime],
   );
   const maxDayjs = useMemo(
     () => (maxDatetime ? dayjs(maxDatetime) : undefined),
-    [maxDatetime]
+    [maxDatetime],
   );
 
   return (
     <Box sx={{ width: "100%", py: 0.5 }}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <MuiDateTimeRangePicker
-          localeText={{ start: label ? `${label} (start)` : "Start", end: label ? `${label} (end)` : "End" }}
+          localeText={{
+            start: label ? `${label} (start)` : "Start",
+            end: label ? `${label} (end)` : "End",
+          }}
           value={selected}
           onChange={handleChange}
           ampm={ampm}

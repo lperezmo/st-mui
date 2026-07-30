@@ -18,8 +18,8 @@ jobs:
   # TypeScript type check of the frontend. Runs independently of the build
   # (Vite transpiles without type-checking), so this is the only gate that
   # catches type regressions such as passing a prop MUI does not accept.
-  typecheck:
-    name: Typecheck frontend
+  frontend:
+    name: Test and typecheck frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -29,6 +29,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: st_mui/frontend/package-lock.json
       - run: npm ci
+        working-directory: st_mui/frontend
+      - run: npm test
         working-directory: st_mui/frontend
       - run: npm run typecheck
         working-directory: st_mui/frontend
@@ -56,18 +58,29 @@ jobs:
           path: frontend-build.tgz
           retention-days: 1
 
-  # Fast, browser-less guard across every supported Streamlit minor: discovery
-  # registers all six components, `import st_mui` stays lazy, and the compat
-  # layer can disable style isolation (at registration on >=1.53, call site on
-  # 1.51/1.52).
+  # Fast, browser-less guards across every supported Streamlit minor. The
+  # oldest supported combination also runs on Python 3.10 so datetime parsing
+  # cannot regress unnoticed.
   smoke:
-    name: Smoke (Streamlit ${{ matrix.streamlit || 'latest' }})
+    name: Python ${{ matrix.python }} / Streamlit ${{ matrix.streamlit || 'latest' }}
     needs: build-frontend
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        streamlit: ['1.51.*', '1.52.*', '1.53.*', '1.56.*', '']
+        include:
+          - python: '3.10'
+            streamlit: '1.51.*'
+          - python: '3.13'
+            streamlit: '1.51.*'
+          - python: '3.13'
+            streamlit: '1.52.*'
+          - python: '3.13'
+            streamlit: '1.53.*'
+          - python: '3.13'
+            streamlit: '1.56.*'
+          - python: '3.13'
+            streamlit: ''
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v7
@@ -76,7 +89,7 @@ jobs:
       - run: tar xzf frontend-build.tgz
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: ${{ matrix.python }}
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
@@ -89,4 +102,4 @@ jobs:
             uv pip install -e . pytest
           fi
       - run: .venv/bin/python -c "import streamlit; print('streamlit', streamlit.__version__)"
-      - run: .venv/bin/python -m pytest test/test_registration_smoke.py -v
+      - run: .venv/bin/python -m pytest test -v

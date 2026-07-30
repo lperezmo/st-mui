@@ -54,7 +54,7 @@ def date_range_picker(
     license_key : str or None
         MUI X Pro license key. Falls back to ST_MUI_LICENSE_KEY env var.
     on_change : callable or None
-        Callback when the selected date range changes.
+        Callback run once when either end of the selected range changes.
     key : str or None
         Unique widget key.
 
@@ -93,8 +93,9 @@ def date_range_picker(
             "disabled": disabled,
             "licenseKey": _get_license_key(license_key),
         },
-        on_start_date_change=on_change or _noop,
+        on_start_date_change=_noop,
         on_end_date_change=_noop,
+        on_range_change=on_change or _noop,
     )
 
     def _parse_date(val):

@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker as MuiDateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { serializeWallClockDateTime } from "../shared/datetime";
 
 export type DateTimePickerState = {
   selected_datetime: string | null;
@@ -30,30 +31,24 @@ type Props = {
 const DateTimePickerComponent: FC<Props> = ({ data, setStateValue }) => {
   const { label, value, minDatetime, maxDatetime, ampm, disabled } = data;
 
-  const initialValue = useMemo(
-    () => (value ? dayjs(value) : null),
-    [value]
-  );
+  const initialValue = useMemo(() => (value ? dayjs(value) : null), [value]);
   const [selected, setSelected] = useState<Dayjs | null>(initialValue);
 
   const handleChange = useCallback(
     (newValue: Dayjs | null) => {
       setSelected(newValue);
-      setStateValue(
-        "selected_datetime",
-        newValue?.isValid() ? newValue.toISOString() : null
-      );
+      setStateValue("selected_datetime", serializeWallClockDateTime(newValue));
     },
-    [setStateValue]
+    [setStateValue],
   );
 
   const minDayjs = useMemo(
     () => (minDatetime ? dayjs(minDatetime) : undefined),
-    [minDatetime]
+    [minDatetime],
   );
   const maxDayjs = useMemo(
     () => (maxDatetime ? dayjs(maxDatetime) : undefined),
-    [maxDatetime]
+    [maxDatetime],
   );
 
   return (

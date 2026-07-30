@@ -11,6 +11,10 @@ import { applyMuiLicense } from "../shared/license";
 export type DateRangePickerState = {
   start_date: string | null;
   end_date: string | null;
+  range: {
+    start_date: string | null;
+    end_date: string | null;
+  };
 };
 
 export type DateRangePickerData = {
@@ -30,9 +34,34 @@ type Props = {
     DateRangePickerState,
     DateRangePickerData
   >["setStateValue"];
+  setTriggerValue: FrontendRendererArgs<
+    DateRangePickerState,
+    DateRangePickerData
+  >["setTriggerValue"];
 };
 
-const DateRangePickerComponent: FC<Props> = ({ data, setStateValue }) => {
+export function updateDateRangeState(
+  newValue: DateRange<Dayjs>,
+  setStateValue: Props["setStateValue"],
+  setTriggerValue: Props["setTriggerValue"],
+): void {
+  const [start, end] = newValue;
+  const startValue = start?.isValid() ? start.format("YYYY-MM-DD") : null;
+  const endValue = end?.isValid() ? end.format("YYYY-MM-DD") : null;
+
+  setStateValue("start_date", startValue);
+  setStateValue("end_date", endValue);
+  setTriggerValue("range", {
+    start_date: startValue,
+    end_date: endValue,
+  });
+}
+
+const DateRangePickerComponent: FC<Props> = ({
+  data,
+  setStateValue,
+  setTriggerValue,
+}) => {
   const {
     label,
     startValue,
@@ -51,40 +80,35 @@ const DateRangePickerComponent: FC<Props> = ({ data, setStateValue }) => {
       startValue ? dayjs(startValue) : null,
       endValue ? dayjs(endValue) : null,
     ],
-    [startValue, endValue]
+    [startValue, endValue],
   );
   const [selected, setSelected] = useState<DateRange<Dayjs>>(initialValue);
 
   const handleChange = useCallback(
     (newValue: DateRange<Dayjs>) => {
       setSelected(newValue);
-      const [start, end] = newValue;
-      setStateValue(
-        "start_date",
-        start?.isValid() ? start.format("YYYY-MM-DD") : null
-      );
-      setStateValue(
-        "end_date",
-        end?.isValid() ? end.format("YYYY-MM-DD") : null
-      );
+      updateDateRangeState(newValue, setStateValue, setTriggerValue);
     },
-    [setStateValue]
+    [setStateValue, setTriggerValue],
   );
 
   const minDayjs = useMemo(
     () => (minDate ? dayjs(minDate) : undefined),
-    [minDate]
+    [minDate],
   );
   const maxDayjs = useMemo(
     () => (maxDate ? dayjs(maxDate) : undefined),
-    [maxDate]
+    [maxDate],
   );
 
   return (
     <Box sx={{ width: "100%", py: 0.5 }}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <MuiDateRangePicker
-          localeText={{ start: label ? `${label} (start)` : "Start", end: label ? `${label} (end)` : "End" }}
+          localeText={{
+            start: label ? `${label} (start)` : "Start",
+            end: label ? `${label} (end)` : "End",
+          }}
           value={selected}
           onChange={handleChange}
           disabled={disabled}

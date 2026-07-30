@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Callable
 
 from st_mui._compat import component
+from st_mui._datetime import parse_datetime, serialize_datetime
 
 _component = component(
     "st-mui.date_time_picker",
@@ -48,26 +49,19 @@ def date_time_picker(
     Returns
     -------
     datetime or None
-        The selected datetime, or None if nothing selected.
+        The selected timezone-naive wall-clock datetime, or None.
     """
-    def _serialize_dt(dt):
-        if dt is None:
-            return None
-        if isinstance(dt, datetime):
-            return dt.isoformat()
-        return str(dt)
-
     def _noop():
         pass
 
     result = _component(
         key=key,
-        default={"selected_datetime": _serialize_dt(value)},
+        default={"selected_datetime": serialize_datetime(value)},
         data={
             "label": label,
-            "value": _serialize_dt(value),
-            "minDatetime": _serialize_dt(min_datetime),
-            "maxDatetime": _serialize_dt(max_datetime),
+            "value": serialize_datetime(value),
+            "minDatetime": serialize_datetime(min_datetime),
+            "maxDatetime": serialize_datetime(max_datetime),
             "ampm": ampm,
             "disabled": disabled,
         },
@@ -75,9 +69,4 @@ def date_time_picker(
     )
 
     selected = result.get("selected_datetime") if result else None
-    if selected:
-        try:
-            return datetime.fromisoformat(selected)
-        except (ValueError, TypeError):
-            return None
-    return None
+    return parse_datetime(selected)

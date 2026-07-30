@@ -28,22 +28,38 @@ type Props = {
   >["setStateValue"];
 };
 
+export function isTreeItemDisabled(disabled: boolean): boolean {
+  return disabled;
+}
+
 const TreeViewComponent: FC<Props> = ({ data, setStateValue }) => {
-  const { items, label, multiSelect, checkboxSelection, defaultExpanded, defaultSelected } = data;
+  const {
+    items,
+    label,
+    multiSelect,
+    checkboxSelection,
+    defaultExpanded,
+    defaultSelected,
+    disabled,
+  } = data;
 
   const handleSelectedChange = useCallback(
-    (_event: React.SyntheticEvent | null, itemIds: string | string[] | null) => {
-      const selected = itemIds === null ? [] : Array.isArray(itemIds) ? itemIds : [itemIds];
+    (
+      _event: React.SyntheticEvent | null,
+      itemIds: string | string[] | null,
+    ) => {
+      const selected =
+        itemIds === null ? [] : Array.isArray(itemIds) ? itemIds : [itemIds];
       setStateValue("selected_items", selected);
     },
-    [setStateValue]
+    [setStateValue],
   );
 
   const handleExpandedChange = useCallback(
     (_event: React.SyntheticEvent | null, itemIds: string[]) => {
       setStateValue("expanded_items", itemIds);
     },
-    [setStateValue]
+    [setStateValue],
   );
 
   return (
@@ -58,7 +74,10 @@ const TreeViewComponent: FC<Props> = ({ data, setStateValue }) => {
         multiSelect={multiSelect}
         checkboxSelection={checkboxSelection}
         defaultExpandedItems={defaultExpanded}
-        defaultSelectedItems={multiSelect ? defaultSelected : (defaultSelected[0] ?? undefined)}
+        defaultSelectedItems={
+          multiSelect ? defaultSelected : (defaultSelected[0] ?? undefined)
+        }
+        isItemDisabled={() => isTreeItemDisabled(disabled)}
         onSelectedItemsChange={handleSelectedChange}
         onExpandedItemsChange={handleExpandedChange}
       />

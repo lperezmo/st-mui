@@ -100,6 +100,17 @@ selected = tree_view(
 )
 ```
 
+## Behavior notes
+
+- Date-time pickers represent browser-local wall-clock values and return
+  timezone-naive Python `datetime` objects. This avoids silently shifting a
+  selected time to UTC and works consistently on every supported Python
+  version, including Python 3.10. Any timezone information on input values is
+  intentionally ignored.
+- The range picker `on_change` callback runs once when either the start or end
+  value changes.
+- `tree_view(disabled=True)` disables selection and expansion for every item.
+
 ## API
 
 ### `time_picker`
@@ -228,8 +239,13 @@ uv sync --dev
 # Build frontend
 cd st_mui/frontend
 npm install
+npm test
+npm run typecheck
 npm run build
 cd ../..
+
+# Run Python tests
+uv run --with pytest pytest
 
 # Run showcase
 uv run streamlit run examples/showcase.py

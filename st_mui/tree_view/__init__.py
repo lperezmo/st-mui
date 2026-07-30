@@ -42,7 +42,7 @@ def tree_view(
     default_selected : list of str or None
         Item IDs to select by default.
     disabled : bool
-        Whether the tree is disabled.
+        Whether selection and expansion are disabled for every tree item.
     on_change : callable or None
         Callback when the selection changes.
     key : str or None
