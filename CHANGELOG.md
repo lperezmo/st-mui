@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.5.1 (2026-07-30)
+
+### Bug Fixes
+
+- Make release lock synchronization fail fast
+  ([`f3d7b44`](https://github.com/lperezmo/st-mui/commit/f3d7b44c493b49e399a8e62f64d75a05e4827cbe))
+
+
 ## v0.5.0 (2026-07-30)
 
 ### Features
