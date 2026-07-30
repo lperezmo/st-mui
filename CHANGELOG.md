@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.4.0 (2026-07-30)
+
+### Bug Fixes
+
+- Expand showcase and restore data grid rendering
+  ([`dacaeeb`](https://github.com/lperezmo/st-mui/commit/dacaeeb6ef91a8437bab3750aa19635ffa9592f6))
+
+### Features
+
+- Add interactive MUI components and data grid
+  ([`1152b9b`](https://github.com/lperezmo/st-mui/commit/1152b9bc95c72d1b0c227a056f1a221b8d426287))
+
+
 ## v0.3.7 (2026-07-30)
 
 ### Bug Fixes
