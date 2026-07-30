@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.7 (2026-07-30)
+
+### Bug Fixes
+
+- Correct component behavior
+  ([`a8824fc`](https://github.com/lperezmo/st-mui/commit/a8824fc5c0f6296001f3e604c8f756daa9378d17))
+
+
 ## v0.3.6 (2026-07-12)
 
 
