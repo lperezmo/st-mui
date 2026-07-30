@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Callable
 
 from st_mui._compat import component
+from st_mui._datetime import parse_datetime, serialize_datetime
 
 _component = component(
     "st-mui.date_time_range_picker",
@@ -54,28 +55,21 @@ def date_time_range_picker(
     license_key : str or None
         MUI X Pro license key. Falls back to ST_MUI_LICENSE_KEY env var.
     on_change : callable or None
-        Callback when the selected datetime range changes.
+        Callback run once when either end of the selected range changes.
     key : str or None
         Unique widget key.
 
     Returns
     -------
     tuple of (datetime or None, datetime or None)
-        The selected start and end datetimes, or (None, None).
+        The selected timezone-naive wall-clock datetimes, or (None, None).
     """
-
-    def _serialize_dt(dt):
-        if dt is None:
-            return None
-        if isinstance(dt, datetime):
-            return dt.isoformat()
-        return str(dt)
 
     start_val = None
     end_val = None
     if value is not None:
-        start_val = _serialize_dt(value[0])
-        end_val = _serialize_dt(value[1])
+        start_val = serialize_datetime(value[0])
+        end_val = serialize_datetime(value[1])
 
     def _noop():
         pass
@@ -87,24 +81,20 @@ def date_time_range_picker(
             "label": label,
             "startValue": start_val,
             "endValue": end_val,
-            "minDatetime": _serialize_dt(min_datetime),
-            "maxDatetime": _serialize_dt(max_datetime),
+            "minDatetime": serialize_datetime(min_datetime),
+            "maxDatetime": serialize_datetime(max_datetime),
             "ampm": ampm,
             "disabled": disabled,
             "licenseKey": _get_license_key(license_key),
         },
-        on_start_datetime_change=on_change or _noop,
+        on_start_datetime_change=_noop,
         on_end_datetime_change=_noop,
+        on_range_change=on_change or _noop,
     )
 
-    def _parse_dt(val):
-        if not val:
-            return None
-        try:
-            return datetime.fromisoformat(val)
-        except (ValueError, TypeError):
-            return None
-
     if result:
-        return (_parse_dt(result.get("start_datetime")), _parse_dt(result.get("end_datetime")))
+        return (
+            parse_datetime(result.get("start_datetime")),
+            parse_datetime(result.get("end_datetime")),
+        )
     return (None, None)

@@ -36,10 +36,11 @@ export function createMuiRenderer<
   Component: FC<{
     data: TData;
     setStateValue: FrontendRendererArgs<TState, TData>["setStateValue"];
-  }>
+    setTriggerValue: FrontendRendererArgs<TState, TData>["setTriggerValue"];
+  }>,
 ): FrontendRenderer<TState, TData> {
   return (args) => {
-    const { data, parentElement, setStateValue } = args;
+    const { data, parentElement, setStateValue, setTriggerValue } = args;
 
     const rootElement = parentElement.querySelector(".react-root");
     if (!rootElement) {
@@ -70,11 +71,15 @@ export function createMuiRenderer<
         <CacheProvider value={emotionCache}>
           <ThemeProvider theme={theme}>
             <ScopedCssBaseline enableColorScheme>
-              <Component data={data} setStateValue={setStateValue} />
+              <Component
+                data={data}
+                setStateValue={setStateValue}
+                setTriggerValue={setTriggerValue}
+              />
             </ScopedCssBaseline>
           </ThemeProvider>
         </CacheProvider>
-      </StrictMode>
+      </StrictMode>,
     );
 
     return () => {
