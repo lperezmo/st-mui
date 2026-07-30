@@ -6,7 +6,7 @@ This mirrors what the Streamlit runtime does at startup: it calls
 then resolves each component's ``asset_dir``. If discovery does not register a
 component, a real app raises
 ``Component 'st-mui.<name>' must be declared in pyproject.toml with asset_dir``.
-We assert each of the six registrations resolves, that ``import st_mui`` is
+We assert every declared registration resolves, that ``import st_mui`` is
 safe outside a running app (registration is deferred to first use), and that
 the installed Streamlit lets the compat layer disable style isolation (at
 registration on Streamlit >= 1.53, or on the per-call renderer on 1.51 / 1.52).
@@ -34,6 +34,10 @@ COMPONENTS = [
     "date_range_picker",
     "date_time_range_picker",
     "tree_view",
+    "autocomplete",
+    "slider",
+    "rating",
+    "data_grid",
 ]
 
 

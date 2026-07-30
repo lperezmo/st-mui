@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "st-mui"
 version = "0.3.7"
-description = "MUI X components for Streamlit, built with Components v2. Includes DatePicker, TimePicker, and DateTimePicker."
+description = "Material UI and MUI X components for Streamlit, built with Components v2."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -23,7 +23,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Environment :: Web Environment",
 ]
-keywords = ["streamlit", "mui", "datepicker", "timepicker", "components"]
+keywords = ["streamlit", "mui", "material-ui", "data-grid", "components"]
 dependencies = [
     "streamlit>=1.51",
 ]
@@ -47,6 +47,10 @@ include-package-data = true
 "st_mui.date_range_picker" = ["frontend/build/**/*"]
 "st_mui.date_time_range_picker" = ["frontend/build/**/*"]
 "st_mui.tree_view" = ["frontend/build/**/*"]
+"st_mui.autocomplete" = ["frontend/build/**/*"]
+"st_mui.slider" = ["frontend/build/**/*"]
+"st_mui.rating" = ["frontend/build/**/*"]
+"st_mui.data_grid" = ["frontend/build/**/*"]
 
 [tool.semantic_release]
 version_toml = [

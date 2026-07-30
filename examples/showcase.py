@@ -1,7 +1,7 @@
 """
 st-mui Showcase
 ===============
-Interactive demo of MUI X components for Streamlit,
+Interactive demo of Material UI and MUI X components for Streamlit,
 with side-by-side comparisons against standard widgets.
 """
 
@@ -15,6 +15,10 @@ from st_mui import (
     date_range_picker,
     date_time_range_picker,
     tree_view,
+    autocomplete,
+    slider,
+    rating,
+    data_grid,
 )
 
 # -- Page config -------------------------------------------------------------
@@ -24,11 +28,14 @@ st.set_page_config(
     layout="wide",
 )
 
-st.markdown("""<style>
+st.markdown(
+    """<style>
     .block-container {
         padding-top: 1rem;
     }
-</style>""", unsafe_allow_html=True)
+</style>""",
+    unsafe_allow_html=True,
+)
 
 # -- Helpers: branded column banners -----------------------------------------
 _IS_DARK = st.context.theme.type == "dark"
@@ -113,7 +120,7 @@ st.html(f"""
         background-clip:text;
     ">st-mui</h1>
     <p style="margin:0.4rem 0 0; font-size:1rem; opacity:0.7;">
-        MUI X components for Streamlit, powered by Components v2
+        Material UI components for Streamlit, powered by Components v2
     </p>
 </div>
 """)
@@ -124,7 +131,7 @@ with st.sidebar:
     disabled = st.toggle("Disable all components", value=False)
     st.divider()
     st.markdown(
-        "**st-mui** brings production-grade MUI X components to Streamlit "
+        "**st-mui** brings production-grade Material UI components to Streamlit "
         "using the new Components v2 API."
     )
     st.markdown("Components included:")
@@ -134,25 +141,44 @@ with st.sidebar:
     st.markdown("- :material/date_range: DateRangePicker (Pro)")
     st.markdown("- :material/date_range: DateTimeRangePicker (Pro)")
     st.markdown("- :material/account_tree: TreeView")
+    st.markdown("- :material/search: Autocomplete")
+    st.markdown("- :material/tune: Slider")
+    st.markdown("- :material/star: Rating")
+    st.markdown("- :material/table_view: DataGrid (Community)")
 
 # -- Tabs for each component -------------------------------------------------
-tab_time, tab_datetime, tab_date, tab_daterange, tab_dtrange, tab_tree = st.tabs([
-    ":material/schedule: TimePicker",
-    ":material/calendar_month: DateTimePicker",
-    ":material/event: DatePicker",
-    ":material/date_range: DateRangePicker",
-    ":material/date_range: DTRangePicker",
-    ":material/account_tree: TreeView",
-])
+(
+    tab_time,
+    tab_datetime,
+    tab_date,
+    tab_daterange,
+    tab_dtrange,
+    tab_tree,
+    tab_autocomplete,
+    tab_slider,
+    tab_rating,
+    tab_grid,
+) = st.tabs(
+    [
+        ":material/schedule: TimePicker",
+        ":material/calendar_month: DateTimePicker",
+        ":material/event: DatePicker",
+        ":material/date_range: DateRangePicker",
+        ":material/date_range: DTRangePicker",
+        ":material/account_tree: TreeView",
+        ":material/search: Autocomplete",
+        ":material/tune: Slider",
+        ":material/star: Rating",
+        ":material/table_view: DataGrid",
+    ]
+)
 
 # ============================================================================
 # TIME PICKER TAB
 # ============================================================================
 with tab_time:
     st.subheader("TimePicker")
-    st.markdown(
-        "A time picker with clock UI, AM/PM support, and keyboard input."
-    )
+    st.markdown("A time picker with clock UI, AM/PM support, and keyboard input.")
 
     # -- 12-hour AM/PM comparison --
     st.markdown("#### 12-hour (AM/PM)")
@@ -208,7 +234,7 @@ with tab_time:
 
     with st.expander("Usage code"):
         st.code(
-            '''from st_mui import time_picker
+            """from st_mui import time_picker
 from datetime import time
 
 selected = time_picker(
@@ -218,7 +244,7 @@ selected = time_picker(
     min_time=time(8, 0),
     max_time=time(17, 0),
     key="my_time",
-)''',
+)""",
             language="python",
         )
 
@@ -286,7 +312,7 @@ with tab_datetime:
 
     with st.expander("Usage code"):
         st.code(
-            '''from st_mui import date_time_picker
+            """from st_mui import date_time_picker
 from datetime import datetime, timedelta
 
 selected = date_time_picker(
@@ -296,7 +322,7 @@ selected = date_time_picker(
     max_datetime=datetime.now() + timedelta(days=7),
     ampm=True,
     key="my_datetime",
-)''',
+)""",
             language="python",
         )
 
@@ -306,8 +332,7 @@ selected = date_time_picker(
 with tab_date:
     st.subheader("DatePicker")
     st.markdown(
-        "A date picker with calendar popover, keyboard navigation, "
-        "and validation."
+        "A date picker with calendar popover, keyboard navigation, and validation."
     )
 
     # -- Basic comparison --
@@ -389,7 +414,7 @@ with tab_date:
 
     with st.expander("Usage code"):
         st.code(
-            '''from st_mui import date_picker
+            """from st_mui import date_picker
 from datetime import date
 
 selected = date_picker(
@@ -399,7 +424,7 @@ selected = date_picker(
     max_date=date(2026, 12, 31),
     format="MM/DD/YYYY",
     key="my_date",
-)''',
+)""",
             language="python",
         )
 
@@ -479,7 +504,7 @@ with tab_daterange:
 
     with st.expander("Usage code"):
         st.code(
-            '''from st_mui import date_range_picker
+            """from st_mui import date_range_picker
 from datetime import date, timedelta
 
 start, end = date_range_picker(
@@ -490,7 +515,7 @@ start, end = date_range_picker(
     calendars=2,
     # license_key="YOUR_KEY",  # or set ST_MUI_LICENSE_KEY env var
     key="my_range",
-)''',
+)""",
             language="python",
         )
 
@@ -542,7 +567,7 @@ with tab_dtrange:
 
     with st.expander("Usage code"):
         st.code(
-            '''from st_mui import date_time_range_picker
+            """from st_mui import date_time_range_picker
 from datetime import datetime, timedelta
 
 start, end = date_time_range_picker(
@@ -551,7 +576,7 @@ start, end = date_time_range_picker(
     ampm=True,
     # license_key="YOUR_KEY",  # or set ST_MUI_LICENSE_KEY env var
     key="my_dt_range",
-)''',
+)""",
             language="python",
         )
 
@@ -659,7 +684,7 @@ with tab_tree:
 
     with st.expander("Usage code"):
         st.code(
-            '''from st_mui import tree_view
+            """from st_mui import tree_view
 
 items = [
     {
@@ -681,7 +706,208 @@ selected = tree_view(
     default_expanded=["docs"],
     key="my_tree",
 )
-''',
+""",
+            language="python",
+        )
+
+# ============================================================================
+# AUTOCOMPLETE TAB
+# ============================================================================
+with tab_autocomplete:
+    st.subheader("Autocomplete")
+    st.markdown(
+        "Searchable single- and multi-select inputs using MIT-licensed Material UI."
+    )
+
+    _banner_mui()
+    city = autocomplete(
+        [
+            {"label": "Los Angeles", "value": "LAX"},
+            {"label": "New York", "value": "NYC"},
+            {"label": "Seattle", "value": "SEA"},
+            {"label": "Unavailable", "value": "N/A", "disabled": True},
+        ],
+        label="Destination",
+        value="LAX",
+        placeholder="Search cities",
+        disabled=disabled,
+        key="autocomplete_city",
+    )
+    st.code(f"Selected value: {city}")
+
+    _banner_mui()
+    skills = autocomplete(
+        ["Python", "TypeScript", "Rust"],
+        label="Skills",
+        value=["Python"],
+        multiple=True,
+        free_solo=True,
+        helper_text="Choose suggestions or enter your own",
+        disabled=disabled,
+        key="autocomplete_skills",
+    )
+    st.code(f"Selected values: {skills}")
+
+    with st.expander("Usage code"):
+        st.code(
+            """from st_mui import autocomplete
+
+selected = autocomplete(
+    [{"label": "Los Angeles", "value": "LAX"}, "Other"],
+    label="Destination",
+    multiple=False,
+    key="destination",
+)
+""",
+            language="python",
+        )
+
+# ============================================================================
+# SLIDER TAB
+# ============================================================================
+with tab_slider:
+    st.subheader("Slider")
+    st.markdown(
+        "Single-value and range sliders that update Streamlit when a drag is committed."
+    )
+
+    _banner_mui()
+    volume = slider(
+        "Volume",
+        35,
+        min_value=0,
+        max_value=100,
+        marks=True,
+        disabled=disabled,
+        key="slider_volume",
+    )
+    st.code(f"Volume: {volume}")
+
+    _banner_mui()
+    budget = slider(
+        "Budget",
+        (25, 75),
+        min_value=0,
+        max_value=100,
+        step=5,
+        marks=[
+            {"value": 0, "label": "$0"},
+            {"value": 50, "label": "$50"},
+            {"value": 100, "label": "$100"},
+        ],
+        value_label_display="on",
+        disabled=disabled,
+        key="slider_budget",
+    )
+    st.code(f"Budget range: {budget}")
+
+    with st.expander("Usage code"):
+        st.code(
+            """from st_mui import slider
+
+low, high = slider(
+    "Price range",
+    value=(20, 80),
+    min_value=0,
+    max_value=100,
+    step=5,
+    key="price",
+)
+""",
+            language="python",
+        )
+
+# ============================================================================
+# RATING TAB
+# ============================================================================
+with tab_rating:
+    st.subheader("Rating")
+    st.markdown("An accessible star rating with fractional precision.")
+
+    _banner_mui()
+    score = rating(
+        "How useful is st-mui?",
+        value=4,
+        precision=0.5,
+        disabled=disabled,
+        key="rating_useful",
+    )
+    st.code(f"Rating: {score}")
+
+    _banner_mui()
+    readonly_score = rating(
+        "Read-only score",
+        value=7.5,
+        max_value=10,
+        precision=0.5,
+        read_only=True,
+        key="rating_readonly",
+    )
+    st.code(f"Read-only rating: {readonly_score}")
+
+    with st.expander("Usage code"):
+        st.code(
+            """from st_mui import rating
+
+score = rating(
+    "Score",
+    value=3.5,
+    max_value=5,
+    precision=0.5,
+    key="score",
+)
+""",
+            language="python",
+        )
+
+# ============================================================================
+# DATA GRID TAB
+# ============================================================================
+with tab_grid:
+    st.subheader("DataGrid")
+    st.markdown(
+        "The MIT-licensed MUI X Community Data Grid with selection, sorting, "
+        "filtering, and pagination."
+    )
+
+    _banner_mui()
+    grid_state = data_grid(
+        rows=[
+            {"id": 1, "name": "Ada Lovelace", "role": "Engineer", "score": 98},
+            {"id": 2, "name": "Grace Hopper", "role": "Admiral", "score": 99},
+            {"id": 3, "name": "Margaret Hamilton", "role": "Lead", "score": 97},
+            {"id": 4, "name": "Alan Turing", "role": "Researcher", "score": 96},
+        ],
+        columns=[
+            {"field": "name", "header_name": "Name", "min_width": 180},
+            {
+                "field": "role",
+                "type": "singleSelect",
+                "value_options": ["Engineer", "Admiral", "Lead", "Researcher"],
+            },
+            {"field": "score", "type": "number", "width": 110},
+        ],
+        page_size=5,
+        checkbox_selection=True,
+        disabled=disabled,
+        key="community_grid",
+    )
+    st.json(grid_state)
+
+    with st.expander("Usage code"):
+        st.code(
+            """from st_mui import data_grid
+
+state = data_grid(
+    rows=[
+        {"id": 1, "name": "Ada", "score": 98},
+        {"id": 2, "name": "Grace", "score": 99},
+    ],
+    columns=["name", {"field": "score", "type": "number"}],
+    checkbox_selection=True,
+    key="people",
+)
+""",
             language="python",
         )
 
@@ -689,5 +915,5 @@ selected = tree_view(
 st.divider()
 st.caption(
     "Built with [st-mui](https://github.com/lperezmo/st-mui) | "
-    "MUI X (Community + Pro) | Streamlit Components v2"
+    "Material UI + MUI X (Community + Pro) | Streamlit Components v2"
 )
