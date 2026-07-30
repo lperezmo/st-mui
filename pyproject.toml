@@ -57,6 +57,13 @@ version_toml = [
     "pyproject.toml:project.version",
     "st_mui/pyproject.toml:project.version",
 ]
+# semantic-release updates the version files before running this command.
+# Refresh and stage uv.lock so the release commit and tag stay reproducible.
+build_command = """
+python -m pip install "uv==0.11.32"
+uv lock --upgrade-package "$PACKAGE_NAME"
+git add uv.lock
+"""
 tag_format = "v{version}"
 commit_message = "chore(release): v{version}"
 

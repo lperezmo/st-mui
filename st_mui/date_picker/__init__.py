@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from datetime import date
-from typing import Callable
 
 from st_mui._compat import component
+from st_mui._picker import normalize_bool, normalize_optional_text, normalize_views
 
 _component = component(
     "st-mui.date_picker",
@@ -23,6 +24,15 @@ def date_picker(
     disabled: bool = False,
     on_change: Callable | None = None,
     key: str | None = None,
+    *,
+    helper_text: str | None = None,
+    clearable: bool = True,
+    read_only: bool = False,
+    disable_past: bool = False,
+    disable_future: bool = False,
+    open_to: str | None = None,
+    views: Sequence[str] | None = None,
+    display_week_number: bool = False,
 ) -> date | None:
     """A rich date picker powered by MUI X.
 
@@ -44,12 +54,49 @@ def date_picker(
         Callback when the selected date changes.
     key : str or None
         Unique widget key.
+    helper_text : str or None
+        Supporting text displayed below the input.
+    clearable : bool
+        Whether the selected value can be cleared.
+    read_only : bool
+        Whether the value can be viewed but not changed.
+    disable_past, disable_future : bool
+        Prevent selecting dates before or after today.
+    open_to : {"year", "month", "day"} or None
+        View displayed when the picker first opens.
+    views : sequence of {"year", "month", "day"} or None
+        Views users can navigate through.
+    display_week_number : bool
+        Display ISO week numbers in the calendar.
 
     Returns
     -------
     date or None
         The selected date, or None if nothing selected.
     """
+    if not isinstance(label, str):
+        raise TypeError("label must be a string")
+    if not isinstance(format, str):
+        raise TypeError("format must be a string")
+    normalize_bool(disabled, field="disabled")
+    if on_change is not None and not callable(on_change):
+        raise TypeError("on_change must be callable or None")
+    helper_text = normalize_optional_text(helper_text, field="helper_text")
+    for name, flag in (
+        ("clearable", clearable),
+        ("read_only", read_only),
+        ("disable_past", disable_past),
+        ("disable_future", disable_future),
+        ("display_week_number", display_week_number),
+    ):
+        normalize_bool(flag, field=name)
+    normalized_views, open_to = normalize_views(
+        views,
+        allowed=("year", "month", "day"),
+        default=("year", "month", "day"),
+        open_to=open_to,
+    )
+
     def _serialize_date(d):
         if d is None:
             return None
@@ -60,9 +107,10 @@ def date_picker(
     def _noop():
         pass
 
+    serialized_value = _serialize_date(value)
     result = _component(
         key=key,
-        default={"selected_date": _serialize_date(value)},
+        default={"selected_date": serialized_value},
         data={
             "label": label,
             "value": _serialize_date(value),
@@ -70,11 +118,21 @@ def date_picker(
             "maxDate": _serialize_date(max_date),
             "format": format,
             "disabled": disabled,
+            "helperText": helper_text,
+            "clearable": clearable,
+            "readOnly": read_only,
+            "disablePast": disable_past,
+            "disableFuture": disable_future,
+            "openTo": open_to,
+            "views": normalized_views,
+            "displayWeekNumber": display_week_number,
         },
         on_selected_date_change=on_change or _noop,
     )
 
     selected = result.get("selected_date") if result else None
+    if selected is None and not clearable and serialized_value is not None:
+        selected = serialized_value
     if selected:
         try:
             return date.fromisoformat(selected)

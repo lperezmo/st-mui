@@ -5,22 +5,25 @@ Interactive demo of Material UI and MUI X components for Streamlit,
 with side-by-side comparisons against standard widgets.
 """
 
-from datetime import date, time, datetime, timedelta
+# Picker values intentionally use naive local wall-clock datetimes.
+# ruff: noqa: DTZ001, DTZ005, DTZ011
+
+from datetime import date, datetime, time, timedelta
 from functools import partial
 
 import streamlit as st
 
 from st_mui import (
-    date_picker,
-    time_picker,
-    date_time_picker,
-    date_range_picker,
-    date_time_range_picker,
-    tree_view,
     autocomplete,
-    slider,
-    rating,
     data_grid,
+    date_picker,
+    date_range_picker,
+    date_time_picker,
+    date_time_range_picker,
+    rating,
+    slider,
+    time_picker,
+    tree_view,
 )
 
 # -- Page config -------------------------------------------------------------
@@ -144,9 +147,9 @@ st.html(f"""
 
 metric_components, metric_new, metric_licenses, metric_tests = st.columns(4)
 metric_components.metric("Interactive widgets", "10")
-metric_new.metric("New in this PR", "4")
-metric_licenses.metric("New widget licenses", "100% MIT")
-metric_tests.metric("New feature scenarios", "13")
+metric_new.metric("Picker APIs", "5 expanded")
+metric_licenses.metric("Widget licenses", "100% MIT")
+metric_tests.metric("Range runtime", "No Pro code")
 
 # -- Sidebar: global controls ------------------------------------------------
 with st.sidebar:
@@ -165,19 +168,19 @@ with st.sidebar:
     st.markdown("- :material/schedule: TimePicker")
     st.markdown("- :material/calendar_month: DateTimePicker")
     st.markdown("- :material/event: DatePicker")
-    st.markdown("- :material/date_range: DateRangePicker (Pro)")
-    st.markdown("- :material/date_range: DateTimeRangePicker (Pro)")
+    st.markdown("- :material/date_range: DateRangePicker (Community)")
+    st.markdown("- :material/date_range: DateTimeRangePicker (Community)")
     st.markdown("- :material/account_tree: TreeView")
     st.markdown("- :material/search: Autocomplete")
     st.markdown("- :material/tune: Slider")
     st.markdown("- :material/star: Rating")
     st.markdown("- :material/table_view: DataGrid (Community)")
     st.divider()
-    st.markdown("**New component feature tour**")
+    st.markdown("**Feature tour**")
     st.markdown(
-        "The last four tabs cover scalar identity, free-form multi-select, "
-        "generated and discrete marks, fractional and read-only ratings, "
-        "typed grid columns, controlled models, callbacks, and pagination."
+        "The picker tabs cover paired MIT ranges, helper text, clearability, "
+        "read-only mode, validation guards, views, formats, week numbers, and "
+        "minute steps. The remaining tabs cover every advanced widget mode."
     )
 
 # -- Tabs for each component -------------------------------------------------
@@ -251,6 +254,9 @@ with tab_time:
             ampm=False,
             min_time=time(8, 0),
             max_time=time(17, 0),
+            minutes_step=15,
+            format="HH:mm",
+            helper_text="Quarter-hour appointments from 08:00 to 17:00",
             disabled=disabled,
             key="tp_24h",
         )
@@ -266,6 +272,24 @@ with tab_time:
         )
         st.code(f"Selected: {t_st2}")
 
+    st.divider()
+    st.markdown("#### Read-only view with a focused clock flow")
+    _banner_mui()
+    t_mui3 = time_picker(
+        label="Recorded handoff",
+        value=time(16, 45),
+        ampm=False,
+        helper_text="Read-only, non-clearable, and opened directly to minutes.",
+        clearable=False,
+        read_only=True,
+        open_to="minutes",
+        views=["hours", "minutes"],
+        minutes_step=15,
+        disabled=disabled,
+        key="tp_read_only",
+    )
+    st.code(f"Selected: {t_mui3}")
+
     with st.expander("Usage code"):
         st.code(
             """from st_mui import time_picker
@@ -277,6 +301,10 @@ selected = time_picker(
     ampm=True,
     min_time=time(8, 0),
     max_time=time(17, 0),
+    minutes_step=15,
+    format="HH:mm",
+    helper_text="Business hours",
+    clearable=True,
     key="my_time",
 )""",
             language="python",
@@ -307,12 +335,19 @@ with tab_datetime:
 
     with st.container(horizontal=True):
         _banner_st()
-        dt_st1 = st.datetime_input(
-            "Select date & time",
-            value=datetime.now(),
+        dt_st1_date = st.date_input(
+            "Select date",
+            value=datetime.now().date(),
             disabled=disabled,
-            key="st_dt_basic",
+            key="st_dt_basic_date",
         )
+        dt_st1_time = st.time_input(
+            "Select time",
+            value=datetime.now().time(),
+            disabled=disabled,
+            key="st_dt_basic_time",
+        )
+        dt_st1 = datetime.combine(dt_st1_date, dt_st1_time)
         st.code(f"Selected: {dt_st1}")
 
     st.divider()
@@ -324,9 +359,16 @@ with tab_datetime:
         _banner_mui()
         dt_mui2 = date_time_picker(
             label="Next 7 days only",
+            value=datetime.now() + timedelta(hours=1),
             min_datetime=datetime.now(),
             max_datetime=datetime.now() + timedelta(days=7),
             ampm=False,
+            helper_text="Future appointments in 15-minute increments",
+            disable_past=True,
+            open_to="hours",
+            views=["day", "hours", "minutes"],
+            minutes_step=15,
+            format="DD MMM YYYY HH:mm",
             disabled=disabled,
             key="dtp_bounded",
         )
@@ -334,15 +376,37 @@ with tab_datetime:
 
     with st.container(horizontal=True):
         _banner_st()
-        dt_st2 = st.datetime_input(
-            "Next 7 days only",
-            value=datetime.now(),
-            min_value=datetime.now(),
-            max_value=datetime.now() + timedelta(days=7),
+        dt_st2_date = st.date_input(
+            "Next 7 days",
+            value=datetime.now().date(),
+            min_value=datetime.now().date(),
+            max_value=(datetime.now() + timedelta(days=7)).date(),
             disabled=disabled,
-            key="st_dt_bounded",
+            key="st_dt_bounded_date",
         )
+        dt_st2_time = st.time_input(
+            "Appointment time",
+            value=(datetime.now() + timedelta(hours=1)).time(),
+            step=timedelta(minutes=15),
+            disabled=disabled,
+            key="st_dt_bounded_time",
+        )
+        dt_st2 = datetime.combine(dt_st2_date, dt_st2_time)
         st.code(f"Selected: {dt_st2}")
+
+    st.divider()
+    st.markdown("#### Read-only timestamp")
+    _banner_mui()
+    dt_mui3 = date_time_picker(
+        label="Deployment recorded",
+        value=datetime(2026, 7, 30, 16, 45),
+        helper_text="The value is visible but cannot be edited or cleared.",
+        clearable=False,
+        read_only=True,
+        disabled=disabled,
+        key="dtp_read_only",
+    )
+    st.code(f"Selected: {dt_mui3}")
 
     with st.expander("Usage code"):
         st.code(
@@ -354,7 +418,13 @@ selected = date_time_picker(
     value=datetime.now(),
     min_datetime=datetime.now(),
     max_datetime=datetime.now() + timedelta(days=7),
-    ampm=True,
+    ampm=False,
+    disable_past=True,
+    views=["day", "hours", "minutes"],
+    open_to="hours",
+    minutes_step=15,
+    format="DD MMM YYYY HH:mm",
+    helper_text="Next seven days",
     key="my_datetime",
 )""",
             language="python",
@@ -430,6 +500,11 @@ with tab_date:
             label="DD/MM/YYYY format",
             value=date(2026, 3, 14),
             format="DD/MM/YYYY",
+            helper_text="Includes ISO week numbers and opens on month selection.",
+            clearable=False,
+            open_to="month",
+            views=["year", "month", "day"],
+            display_week_number=True,
             disabled=disabled,
             key="dp_format",
         )
@@ -446,6 +521,21 @@ with tab_date:
         )
         st.code(f"Selected: {d_st3}")
 
+    st.divider()
+    st.markdown("#### Future-only read-only date")
+    _banner_mui()
+    d_mui4 = date_picker(
+        label="Next review",
+        value=date.today() + timedelta(days=30),
+        helper_text="Past dates are disabled; this value is read-only.",
+        read_only=True,
+        disable_past=True,
+        disable_future=False,
+        disabled=disabled,
+        key="dp_read_only",
+    )
+    st.code(f"Selected: {d_mui4}")
+
     with st.expander("Usage code"):
         st.code(
             """from st_mui import date_picker
@@ -457,6 +547,11 @@ selected = date_picker(
     min_date=date(2026, 1, 1),
     max_date=date(2026, 12, 31),
     format="MM/DD/YYYY",
+    helper_text="Pick a date this year",
+    clearable=True,
+    views=["year", "month", "day"],
+    open_to="month",
+    display_week_number=True,
     key="my_date",
 )""",
             language="python",
@@ -466,30 +561,32 @@ selected = date_picker(
 # DATE RANGE PICKER TAB
 # ============================================================================
 with tab_daterange:
-    st.subheader("DateRangePicker (Pro)")
+    st.subheader("DateRangePicker (MIT Community)")
     st.markdown(
-        "Select a date range with start and end dates. "
-        "This is a MUI X Pro component -- works in evaluation mode without a license key."
+        "Two controlled MUI X Community fields provide an entirely MIT-licensed "
+        "range workflow with cross-field validation and one composite callback."
     )
-    st.warning(
-        "MUI was contacted for a development license to run this demo without a "
-        "watermark and refused. Open-source replacements for the Pro range "
-        "components are coming soon. **Please do not purchase a MUI X Pro license.**",
-        icon=":material/warning:",
-    )
+    st.success("No Pro package, license key, watermark, or license runtime is shipped.")
 
     # -- Basic --
-    st.markdown("#### Basic")
+    st.markdown("#### Future trip with custom labels and callback")
 
     with st.container(horizontal=True):
         _banner_mui()
         dr = date_range_picker(
             label="Trip dates",
             value=(date.today(), date.today() + timedelta(days=7)),
+            start_label="Depart",
+            end_label="Return",
+            helper_text="The return date can never precede departure.",
+            clearable=True,
+            disable_past=True,
+            on_change=_change_callback("date_range"),
             disabled=disabled,
             key="drp_basic",
         )
         st.code(f"Start: {dr[0]}  End: {dr[1]}")
+        _change_count("date_range")
 
     with st.container(horizontal=True):
         _banner_st()
@@ -506,16 +603,20 @@ with tab_daterange:
 
     st.divider()
 
-    # -- With bounds --
-    st.markdown("#### With bounds (this month, single calendar)")
+    # -- With bounds and display controls --
+    st.markdown("#### Bounded range with format, views, and week numbers")
 
     with st.container(horizontal=True):
         _banner_mui()
         dr2 = date_range_picker(
-            label="This month only",
-            min_date=date(2026, 3, 1),
-            max_date=date(2026, 3, 31),
-            calendars=1,
+            label="Release window",
+            value=(date(2026, 8, 3), date(2026, 8, 14)),
+            min_date=date(2026, 8, 1),
+            max_date=date(2026, 8, 31),
+            format="DD MMM YYYY",
+            open_to="day",
+            views=["month", "day"],
+            display_week_number=True,
             disabled=disabled,
             key="drp_bounded",
         )
@@ -524,10 +625,10 @@ with tab_daterange:
     with st.container(horizontal=True):
         _banner_st()
         dr2_st = st.date_input(
-            "This month only",
-            value=(date(2026, 3, 1), date(2026, 3, 15)),
-            min_value=date(2026, 3, 1),
-            max_value=date(2026, 3, 31),
+            "Release window",
+            value=(date(2026, 8, 3), date(2026, 8, 14)),
+            min_value=date(2026, 8, 1),
+            max_value=date(2026, 8, 31),
             disabled=disabled,
             key="st_daterange_bounded",
         )
@@ -535,6 +636,21 @@ with tab_daterange:
             st.code(f"Start: {dr2_st[0]}  End: {dr2_st[1]}")
         else:
             st.code(f"Selected: {dr2_st}")
+
+    st.divider()
+    st.markdown("#### Read-only policy window")
+    _banner_mui()
+    dr3 = date_range_picker(
+        label="Policy period",
+        value=(date(2026, 1, 1), date(2026, 12, 31)),
+        helper_text="Read-only and non-clearable.",
+        clearable=False,
+        read_only=True,
+        disable_future=False,
+        disabled=disabled,
+        key="drp_read_only",
+    )
+    st.code(f"Start: {dr3[0]}  End: {dr3[1]}")
 
     with st.expander("Usage code"):
         st.code(
@@ -546,8 +662,13 @@ start, end = date_range_picker(
     value=(date.today(), date.today() + timedelta(days=7)),
     min_date=date(2026, 1, 1),
     max_date=date(2026, 12, 31),
-    calendars=2,
-    # license_key="YOUR_KEY",  # or set ST_MUI_LICENSE_KEY env var
+    start_label="Depart",
+    end_label="Return",
+    helper_text="Return must follow departure",
+    clearable=True,
+    views=["month", "day"],
+    display_week_number=True,
+    on_change=handle_change,
     key="my_range",
 )""",
             language="python",
@@ -557,31 +678,37 @@ start, end = date_range_picker(
 # DATE TIME RANGE PICKER TAB
 # ============================================================================
 with tab_dtrange:
-    st.subheader("DateTimeRangePicker (Pro)")
+    st.subheader("DateTimeRangePicker (MIT Community)")
     st.markdown(
-        "Select a datetime range with start and end dates and times. "
-        "This is a MUI X Pro component -- works in evaluation mode without a license key."
+        "A paired Community DateTimePicker keeps timezone-naive wall-clock "
+        "semantics while enforcing an ordered interval."
     )
-    st.warning(
-        "MUI was contacted for a development license to run this demo without a "
-        "watermark and refused. Open-source replacements for the Pro range "
-        "components are coming soon. **Please do not purchase a MUI X Pro license.**",
-        icon=":material/warning:",
-    )
+    st.success("This range widget is MIT-only and has no commercial runtime.")
 
     # -- Basic --
-    st.markdown("#### Basic (AM/PM)")
+    st.markdown("#### Meeting window with callback")
 
     with st.container(horizontal=True):
         _banner_mui()
         dtr = date_time_range_picker(
             label="Event",
-            value=(datetime.now(), datetime.now() + timedelta(hours=2)),
+            value=(
+                datetime.now() + timedelta(hours=1),
+                datetime.now() + timedelta(hours=3),
+            ),
+            start_label="Starts",
+            end_label="Ends",
+            helper_text="Quarter-hour steps with a single range callback.",
+            clearable=True,
+            disable_past=True,
+            minutes_step=15,
+            on_change=_change_callback("datetime_range"),
             disabled=disabled,
             key="dtrp_basic",
         )
         st.code(f"Start: {dtr[0]}")
         st.code(f"End:   {dtr[1]}")
+        _change_count("datetime_range")
 
     st.divider()
 
@@ -592,12 +719,39 @@ with tab_dtrange:
         _banner_mui()
         dtr2 = date_time_range_picker(
             label="Shift schedule",
+            value=(
+                datetime(2026, 8, 3, 8, 0),
+                datetime(2026, 8, 3, 16, 30),
+            ),
             ampm=False,
+            format="DD MMM YYYY HH:mm",
+            open_to="hours",
+            views=["day", "hours", "minutes"],
+            minutes_step=30,
             disabled=disabled,
             key="dtrp_24h",
         )
         st.code(f"Start: {dtr2[0]}")
         st.code(f"End:   {dtr2[1]}")
+
+    st.divider()
+    st.markdown("#### Read-only maintenance window")
+    _banner_mui()
+    dtr3 = date_time_range_picker(
+        label="Maintenance",
+        value=(
+            datetime(2026, 8, 8, 22, 0),
+            datetime(2026, 8, 9, 1, 0),
+        ),
+        helper_text="Read-only and non-clearable.",
+        clearable=False,
+        read_only=True,
+        disable_future=False,
+        disabled=disabled,
+        key="dtrp_read_only",
+    )
+    st.code(f"Start: {dtr3[0]}")
+    st.code(f"End:   {dtr3[1]}")
 
     with st.expander("Usage code"):
         st.code(
@@ -607,8 +761,15 @@ from datetime import datetime, timedelta
 start, end = date_time_range_picker(
     label="Event",
     value=(datetime.now(), datetime.now() + timedelta(hours=2)),
-    ampm=True,
-    # license_key="YOUR_KEY",  # or set ST_MUI_LICENSE_KEY env var
+    start_label="Starts",
+    end_label="Ends",
+    ampm=False,
+    format="DD MMM YYYY HH:mm",
+    helper_text="Quarter-hour scheduling",
+    clearable=True,
+    views=["day", "hours", "minutes"],
+    minutes_step=15,
+    on_change=handle_change,
     key="my_dt_range",
 )""",
             language="python",
@@ -1310,5 +1471,5 @@ state = data_grid(
 st.divider()
 st.caption(
     "Built with [st-mui](https://github.com/lperezmo/st-mui) | "
-    "Material UI + MUI X (Community + Pro) | Streamlit Components v2"
+    "Material UI + MIT-licensed MUI X Community | Streamlit Components v2"
 )

@@ -13,7 +13,7 @@
 >
 > MUI was contacted and asked to provide a development/demo license solely to run the showcase app without displaying a watermark. **They refused.**
 >
-> I therefore **strongly encourage everyone NOT to purchase a MUI X Pro license.** Fully open-source replacements for the Pro time-range components will be added to this library in the near future.
+> I therefore **strongly encourage everyone NOT to purchase a MUI X Pro license.** `st-mui` no longer ships MUI X Pro: both range widgets are implemented with MIT-licensed Community pickers and require no license key.
 
 </div>
 
@@ -38,17 +38,15 @@
 | Component | Description | License | Streamlit equivalent |
 |-----------|-------------|---------|----------------------|
 | `time_picker` | Clock UI, AM/PM toggle, min/max bounds | MIT | `st.time_input` |
-| `date_time_picker` | Combined date + time, AM/PM toggle, calendar popover | MIT | `st.datetime_input` |
+| `date_time_picker` | Combined date + time, AM/PM toggle, calendar popover | MIT | `st.date_input` + `st.time_input` |
 | `date_picker` | Calendar popover with format control | MIT | `st.date_input` |
-| `date_range_picker` | Date range selection with dual calendars | Pro* | `st.date_input` (range mode) |
-| `date_time_range_picker` | Datetime range with start/end time selection | Pro* | -- |
+| `date_range_picker` | Validated start/end date selection | MIT | `st.date_input` (range mode) |
+| `date_time_range_picker` | Validated start/end datetime selection | MIT | -- |
 | `tree_view` | Hierarchical tree with checkboxes and multi-select | MIT | -- |
 | `autocomplete` | Searchable single/multi-select and free-form entry | MIT | `st.selectbox` / `st.multiselect` |
 | `slider` | Numeric single-value and range slider with marks | MIT | `st.slider` |
 | `rating` | Accessible star rating with fractional precision | MIT | -- |
 | `data_grid` | Sortable, filterable, pageable Community Data Grid | MIT | `st.dataframe` |
-
-*\*Pro components work in evaluation mode without a license key (watermark shown). Set `ST_MUI_LICENSE_KEY` env var or pass `license_key=` to remove it.*
 
 ## Installation
 
@@ -132,6 +130,13 @@ grid_state = data_grid(
   intentionally ignored.
 - The range picker `on_change` callback runs once when either the start or end
   value changes.
+- All five date/time widgets support helper text, clearability, read-only mode,
+  past/future guards, configurable initial/available views, and keyboard input.
+  Date widgets can show ISO week numbers; time widgets support minute-step and
+  display-format controls.
+- Range widgets are composed from two MIT Community fields and enforce start ≤
+  end in both the browser and Python. Historical `license_key` and `calendars`
+  arguments remain accepted as compatibility shims but are no longer used.
 - `tree_view(disabled=True)` disables selection and expansion for every item.
 - `autocomplete` values are JSON-safe strings, numbers, or booleans. Dictionary
   options let display labels differ from returned values. Integer values must
@@ -161,6 +166,16 @@ time_picker(
     disabled=False,
     on_change=None,
     key=None,
+    *,
+    helper_text=None,
+    clearable=True,
+    read_only=False,
+    disable_past=False,
+    disable_future=False,
+    open_to=None,        # "hours", "minutes", or "seconds"
+    views=None,
+    minutes_step=1,
+    format=None,
 ) -> time | None
 ```
 
@@ -176,6 +191,16 @@ date_time_picker(
     disabled=False,
     on_change=None,
     key=None,
+    *,
+    helper_text=None,
+    clearable=True,
+    read_only=False,
+    disable_past=False,
+    disable_future=False,
+    open_to=None,
+    views=None,          # year/month/day/hours/minutes/seconds
+    minutes_step=1,
+    format=None,
 ) -> datetime | None
 ```
 
@@ -191,10 +216,19 @@ date_picker(
     disabled=False,
     on_change=None,
     key=None,
+    *,
+    helper_text=None,
+    clearable=True,
+    read_only=False,
+    disable_past=False,
+    disable_future=False,
+    open_to=None,        # "year", "month", or "day"
+    views=None,
+    display_week_number=False,
 ) -> date | None
 ```
 
-### `date_range_picker` (Pro)
+### `date_range_picker`
 
 ```python
 date_range_picker(
@@ -202,15 +236,27 @@ date_range_picker(
     value=None,           # tuple of (date, date) or (str, str)
     min_date=None,
     max_date=None,
-    calendars=2,          # 1 or 2 calendar panels
+    calendars=2,          # deprecated compatibility argument
     disabled=False,
-    license_key=None,     # or set ST_MUI_LICENSE_KEY env var
+    license_key=None,     # deprecated compatibility argument
     on_change=None,
     key=None,
+    *,
+    start_label=None,
+    end_label=None,
+    format="MM/DD/YYYY",
+    helper_text=None,
+    clearable=False,
+    read_only=False,
+    disable_past=False,
+    disable_future=False,
+    open_to=None,
+    views=None,
+    display_week_number=False,
 ) -> tuple[date | None, date | None]
 ```
 
-### `date_time_range_picker` (Pro)
+### `date_time_range_picker`
 
 ```python
 date_time_range_picker(
@@ -220,9 +266,21 @@ date_time_range_picker(
     max_datetime=None,
     ampm=True,
     disabled=False,
-    license_key=None,     # or set ST_MUI_LICENSE_KEY env var
+    license_key=None,     # deprecated compatibility argument
     on_change=None,
     key=None,
+    *,
+    start_label=None,
+    end_label=None,
+    format=None,
+    helper_text=None,
+    clearable=False,
+    read_only=False,
+    disable_past=False,
+    disable_future=False,
+    open_to=None,
+    views=None,
+    minutes_step=1,
 ) -> tuple[datetime | None, datetime | None]
 ```
 
@@ -319,20 +377,12 @@ The Community Data Grid supports JSON-safe rows, unique string/numeric row IDs,
 column types `string`, `number`, `boolean`, and `singleSelect`, plus Pythonic
 column aliases such as `header_name`, `min_width`, and `value_options`.
 
-## MUI X Pro license
+## Range picker migration
 
-The `date_range_picker` and `date_time_range_picker` use MUI X Pro components. They work in evaluation mode without a license key (a watermark is displayed). To remove the watermark:
-
-```bash
-# Set as environment variable (recommended)
-export ST_MUI_LICENSE_KEY="your-license-key"
-```
-
-Or pass directly:
-
-```python
-date_range_picker(label="Dates", license_key="your-license-key")
-```
+The range widgets use paired MIT-licensed Community fields. Applications
+upgrading from 0.4.0 can keep passing `license_key` or `calendars` while they
+remove those arguments; both are ignored and `license_key` emits a
+`DeprecationWarning`. No MUI X license environment variable is read or bundled.
 
 ## Running the example
 

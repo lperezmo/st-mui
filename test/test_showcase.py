@@ -74,6 +74,66 @@ NEW_COMPONENT_FEATURES = {
     },
 }
 
+PICKER_FEATURES = {
+    "time_picker": {
+        "helper_text",
+        "clearable",
+        "read_only",
+        "open_to",
+        "views",
+        "minutes_step",
+        "format",
+    },
+    "date_time_picker": {
+        "helper_text",
+        "clearable",
+        "read_only",
+        "disable_past",
+        "open_to",
+        "views",
+        "minutes_step",
+        "format",
+    },
+    "date_picker": {
+        "helper_text",
+        "clearable",
+        "read_only",
+        "disable_past",
+        "disable_future",
+        "open_to",
+        "views",
+        "display_week_number",
+    },
+    "date_range_picker": {
+        "start_label",
+        "end_label",
+        "format",
+        "helper_text",
+        "clearable",
+        "read_only",
+        "disable_past",
+        "disable_future",
+        "open_to",
+        "views",
+        "display_week_number",
+        "on_change",
+    },
+    "date_time_range_picker": {
+        "start_label",
+        "end_label",
+        "format",
+        "helper_text",
+        "clearable",
+        "read_only",
+        "disable_past",
+        "disable_future",
+        "open_to",
+        "views",
+        "minutes_step",
+        "on_change",
+    },
+}
+
 
 def _component_calls() -> dict[str, list[ast.Call]]:
     tree = ast.parse(SHOWCASE.read_text(encoding="utf-8"), filename=str(SHOWCASE))
@@ -118,6 +178,22 @@ def test_showcase_exercises_every_new_component_option():
         )
 
 
+def test_showcase_exercises_the_expanded_picker_apis():
+    calls = _component_calls()
+
+    for component_name, expected_keywords in PICKER_FEATURES.items():
+        actual_keywords = {
+            keyword.arg
+            for call in calls[component_name]
+            for keyword in call.keywords
+            if keyword.arg is not None
+        }
+        assert expected_keywords <= actual_keywords, (
+            f"{component_name} showcase is missing picker options: "
+            f"{sorted(expected_keywords - actual_keywords)}"
+        )
+
+
 def test_showcase_has_multiple_meaningful_new_component_scenarios():
     calls = _component_calls()
     counts = Counter(
@@ -128,6 +204,7 @@ def test_showcase_has_multiple_meaningful_new_component_scenarios():
     assert counts["slider"] >= 3
     assert counts["rating"] >= 5
     assert counts["data_grid"] >= 2
+    assert all(counts[name] >= 3 for name in PICKER_FEATURES)
 
     grid_keyword_sets = [
         {keyword.arg for keyword in call.keywords if keyword.arg is not None}
