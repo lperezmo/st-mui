@@ -17,8 +17,6 @@
     "@mui/material": "^7.1.0",
     "@mui/x-data-grid": "^8.29.2",
     "@mui/x-date-pickers": "^8.3.0",
-    "@mui/x-date-pickers-pro": "^8.27.2",
-    "@mui/x-license": "^8.26.0",
     "@mui/x-tree-view": "^8.27.2",
     "@streamlit/component-v2-lib": "^0.2.0",
     "dayjs": "^1.11.13",

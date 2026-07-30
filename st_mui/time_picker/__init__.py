@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from datetime import time
-from typing import Callable
 
 from st_mui._compat import component
+from st_mui._picker import (
+    normalize_bool,
+    normalize_minutes_step,
+    normalize_optional_text,
+    normalize_views,
+)
 
 _component = component(
     "st-mui.time_picker",
@@ -23,6 +29,16 @@ def time_picker(
     disabled: bool = False,
     on_change: Callable | None = None,
     key: str | None = None,
+    *,
+    helper_text: str | None = None,
+    clearable: bool = True,
+    read_only: bool = False,
+    disable_past: bool = False,
+    disable_future: bool = False,
+    open_to: str | None = None,
+    views: Sequence[str] | None = None,
+    minutes_step: int = 1,
+    format: str | None = None,
 ) -> time | None:
     """A rich time picker powered by MUI X.
 
@@ -44,12 +60,51 @@ def time_picker(
         Callback when the selected time changes.
     key : str or None
         Unique widget key.
+    helper_text : str or None
+        Supporting text displayed below the input.
+    clearable : bool
+        Whether the selected value can be cleared.
+    read_only : bool
+        Whether the value can be viewed but not changed.
+    disable_past, disable_future : bool
+        Prevent selecting times before or after the current time.
+    open_to : {"hours", "minutes", "seconds"} or None
+        View displayed when the picker first opens.
+    views : sequence of {"hours", "minutes", "seconds"} or None
+        Clock views users can navigate through.
+    minutes_step : int
+        Minute increment between 1 and 60.
+    format : str or None
+        Optional MUI display format. ``None`` uses the locale default.
 
     Returns
     -------
     time or None
         The selected time, or None if nothing selected.
     """
+    if not isinstance(label, str):
+        raise TypeError("label must be a string")
+    normalize_bool(ampm, field="ampm")
+    normalize_bool(disabled, field="disabled")
+    if on_change is not None and not callable(on_change):
+        raise TypeError("on_change must be callable or None")
+    helper_text = normalize_optional_text(helper_text, field="helper_text")
+    format = normalize_optional_text(format, field="format")
+    for name, flag in (
+        ("clearable", clearable),
+        ("read_only", read_only),
+        ("disable_past", disable_past),
+        ("disable_future", disable_future),
+    ):
+        normalize_bool(flag, field=name)
+    normalized_views, open_to = normalize_views(
+        views,
+        allowed=("hours", "minutes", "seconds"),
+        default=("hours", "minutes"),
+        open_to=open_to,
+    )
+    minutes_step = normalize_minutes_step(minutes_step)
+
     def _serialize_time(t):
         if t is None:
             return None
@@ -60,9 +115,10 @@ def time_picker(
     def _noop():
         pass
 
+    serialized_value = _serialize_time(value)
     result = _component(
         key=key,
-        default={"selected_time": _serialize_time(value)},
+        default={"selected_time": serialized_value},
         data={
             "label": label,
             "value": _serialize_time(value),
@@ -70,11 +126,22 @@ def time_picker(
             "minTime": _serialize_time(min_time),
             "maxTime": _serialize_time(max_time),
             "disabled": disabled,
+            "helperText": helper_text,
+            "clearable": clearable,
+            "readOnly": read_only,
+            "disablePast": disable_past,
+            "disableFuture": disable_future,
+            "openTo": open_to,
+            "views": normalized_views,
+            "minutesStep": minutes_step,
+            "format": format,
         },
         on_selected_time_change=on_change or _noop,
     )
 
     selected = result.get("selected_time") if result else None
+    if selected is None and not clearable and serialized_value is not None:
+        selected = serialized_value
     if selected:
         try:
             return time.fromisoformat(selected)

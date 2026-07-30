@@ -1,13 +1,18 @@
-import { FC, useCallback, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import dayjs, { Dayjs } from "dayjs";
 import Box from "@mui/material/Box";
+import FormHelperText from "@mui/material/FormHelperText";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateTimeRangePicker as MuiDateTimeRangePicker } from "@mui/x-date-pickers-pro/DateTimeRangePicker";
-import { DateRange } from "@mui/x-date-pickers-pro/models";
-import { applyMuiLicense } from "../shared/license";
+import { DateTimePicker as MuiDateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import type {
+  DateOrTimeView,
+  DateTimeValidationError,
+  PickerChangeHandlerContext,
+} from "@mui/x-date-pickers/models";
 import { serializeWallClockDateTime } from "../shared/datetime";
+import { createPickerId } from "../shared/id";
 
 export type DateTimeRangePickerState = {
   start_datetime: string | null;
@@ -20,13 +25,23 @@ export type DateTimeRangePickerState = {
 
 export type DateTimeRangePickerData = {
   label: string;
+  startLabel: string | null;
+  endLabel: string | null;
   startValue: string | null;
   endValue: string | null;
   minDatetime: string | null;
   maxDatetime: string | null;
   ampm: boolean;
+  format: string | null;
+  helperText: string | null;
+  clearable: boolean;
+  readOnly: boolean;
+  disablePast: boolean;
+  disableFuture: boolean;
+  openTo: DateOrTimeView | null;
+  views: DateOrTimeView[] | null;
+  minutesStep: number;
   disabled: boolean;
-  licenseKey: string | null;
 };
 
 type Props = {
@@ -41,21 +56,120 @@ type Props = {
   >["setTriggerValue"];
 };
 
+type DateTimePair = [Dayjs | null, Dayjs | null];
+type SerializedDateTimePair = {
+  start_datetime: string | null;
+  end_datetime: string | null;
+};
+
+function serializeDateTimePair(
+  newValue: DateTimePair,
+): SerializedDateTimePair | null {
+  if (
+    (newValue[0] !== null && !newValue[0].isValid()) ||
+    (newValue[1] !== null && !newValue[1].isValid()) ||
+    (newValue[0] !== null &&
+      newValue[1] !== null &&
+      newValue[0].isAfter(newValue[1]))
+  ) {
+    return null;
+  }
+  return {
+    start_datetime: serializeWallClockDateTime(newValue[0]),
+    end_datetime: serializeWallClockDateTime(newValue[1]),
+  };
+}
+
+function sameDateTimePair(
+  left: SerializedDateTimePair,
+  right: SerializedDateTimePair,
+): boolean {
+  return (
+    left.start_datetime === right.start_datetime &&
+    left.end_datetime === right.end_datetime
+  );
+}
+
 export function updateDateTimeRangeState(
-  newValue: DateRange<Dayjs>,
+  newValue: DateTimePair,
   setStateValue: Props["setStateValue"],
   setTriggerValue: Props["setTriggerValue"],
-): void {
-  const [start, end] = newValue;
-  const startValue = serializeWallClockDateTime(start);
-  const endValue = serializeWallClockDateTime(end);
+  previousValue?: SerializedDateTimePair,
+): boolean {
+  const serialized = serializeDateTimePair(newValue);
+  if (
+    serialized === null ||
+    (previousValue !== undefined && sameDateTimePair(serialized, previousValue))
+  ) {
+    return false;
+  }
 
-  setStateValue("start_datetime", startValue);
-  setStateValue("end_datetime", endValue);
-  setTriggerValue("range", {
-    start_datetime: startValue,
-    end_datetime: endValue,
-  });
+  setStateValue("start_datetime", serialized.start_datetime);
+  setStateValue("end_datetime", serialized.end_datetime);
+  setTriggerValue("range", serialized);
+  return true;
+}
+
+function parseDateTime(value: string | null): Dayjs | null {
+  return value ? dayjs(value) : null;
+}
+
+export function syncExternalDateTimeRangeValue(
+  incoming: SerializedDateTimePair,
+  setStateValue: Props["setStateValue"],
+): DateTimePair {
+  setStateValue("start_datetime", incoming.start_datetime);
+  setStateValue("end_datetime", incoming.end_datetime);
+  return [
+    parseDateTime(incoming.start_datetime),
+    parseDateTime(incoming.end_datetime),
+  ];
+}
+
+function earlierDateTime(
+  left: Dayjs | undefined,
+  right: Dayjs | null,
+): Dayjs | undefined {
+  if (right === null || !right.isValid()) {
+    return left;
+  }
+  return left === undefined || right.isBefore(left) ? right : left;
+}
+
+function laterDateTime(
+  left: Dayjs | undefined,
+  right: Dayjs | null,
+): Dayjs | undefined {
+  if (right === null || !right.isValid()) {
+    return left;
+  }
+  return left === undefined || right.isAfter(left) ? right : left;
+}
+
+export function getDateTimeRangeBounds(
+  minDatetime: Dayjs | undefined,
+  maxDatetime: Dayjs | undefined,
+  selected: DateTimePair,
+): { startMax: Dayjs | undefined; endMin: Dayjs | undefined } {
+  return {
+    startMax: earlierDateTime(maxDatetime, selected[1]),
+    endMin: laterDateTime(minDatetime, selected[0]),
+  };
+}
+
+export function shouldApplyDateTimeRangeEdit(
+  nextValue: DateTimePair,
+  currentValue: DateTimePair,
+  options: { clearable: boolean; disabled: boolean; readOnly: boolean },
+): boolean {
+  if (options.disabled || options.readOnly) {
+    return false;
+  }
+  return !(
+    !options.clearable &&
+    ((nextValue[0] === null && currentValue[0] !== null) ||
+      (nextValue[1] === null && currentValue[1] !== null))
+  );
 }
 
 const DateTimeRangePickerComponent: FC<Props> = ({
@@ -65,32 +179,84 @@ const DateTimeRangePickerComponent: FC<Props> = ({
 }) => {
   const {
     label,
+    startLabel,
+    endLabel,
     startValue,
     endValue,
     minDatetime,
     maxDatetime,
     ampm,
+    format,
+    helperText,
+    clearable,
+    readOnly,
+    disablePast,
+    disableFuture,
+    openTo,
+    views,
+    minutesStep,
     disabled,
-    licenseKey,
   } = data;
 
-  applyMuiLicense(licenseKey);
-
-  const initialValue = useMemo<DateRange<Dayjs>>(
-    () => [
-      startValue ? dayjs(startValue) : null,
-      endValue ? dayjs(endValue) : null,
-    ],
-    [startValue, endValue],
+  const [selected, setSelected] = useState<DateTimePair>(() => [
+    parseDateTime(startValue),
+    parseDateTime(endValue),
+  ]);
+  const latestValue = useRef<SerializedDateTimePair>({
+    start_datetime: startValue,
+    end_datetime: endValue,
+  });
+  const fieldIdBase = useMemo(
+    () => createPickerId("date-time-range-picker"),
+    [],
   );
-  const [selected, setSelected] = useState<DateRange<Dayjs>>(initialValue);
+  const helperTextId = `${fieldIdBase}-helper`;
 
-  const handleChange = useCallback(
-    (newValue: DateRange<Dayjs>) => {
+  useEffect(() => {
+    const incoming = {
+      start_datetime: startValue,
+      end_datetime: endValue,
+    };
+    if (!sameDateTimePair(incoming, latestValue.current)) {
+      latestValue.current = incoming;
+      setSelected(syncExternalDateTimeRangeValue(incoming, setStateValue));
+    }
+  }, [startValue, endValue, setStateValue]);
+
+  const commit = useCallback(
+    (newValue: DateTimePair, valid: boolean) => {
+      if (
+        !shouldApplyDateTimeRangeEdit(newValue, selected, {
+          clearable,
+          disabled,
+          readOnly,
+        })
+      ) {
+        return;
+      }
+
+      // Preserve transient keyboard edits locally. Streamlit only receives a
+      // value after the pair is valid and chronologically ordered.
       setSelected(newValue);
-      updateDateTimeRangeState(newValue, setStateValue, setTriggerValue);
+      if (!valid) {
+        return;
+      }
+      if (
+        !updateDateTimeRangeState(
+          newValue,
+          setStateValue,
+          setTriggerValue,
+          latestValue.current,
+        )
+      ) {
+        return;
+      }
+      const serialized = serializeDateTimePair(newValue);
+      if (serialized !== null) {
+        latestValue.current = serialized;
+      }
     },
-    [setStateValue, setTriggerValue],
+    [clearable, disabled, readOnly, selected, setStateValue, setTriggerValue],
   );
 
   const minDayjs = useMemo(
@@ -101,31 +267,91 @@ const DateTimeRangePickerComponent: FC<Props> = ({
     () => (maxDatetime ? dayjs(maxDatetime) : undefined),
     [maxDatetime],
   );
+  const { startMax, endMin } = getDateTimeRangeBounds(
+    minDayjs,
+    maxDayjs,
+    selected,
+  );
+
+  const commonProps = {
+    ampm,
+    format: format ?? undefined,
+    disabled,
+    readOnly,
+    disablePast,
+    disableFuture,
+    openTo: openTo ?? undefined,
+    views: views ?? undefined,
+    minutesStep,
+    slotProps: {
+      field: { clearable },
+      textField: {
+        fullWidth: true,
+        InputProps: {
+          "aria-describedby": helperText ? helperTextId : undefined,
+        },
+      },
+      popper: {
+        disablePortal: false,
+        style: { zIndex: 999999 },
+      },
+    },
+  };
 
   return (
     <Box sx={{ width: "100%", py: 0.5 }}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <MuiDateTimeRangePicker
-          localeText={{
-            start: label ? `${label} (start)` : "Start",
-            end: label ? `${label} (end)` : "End",
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+            gap: 1.5,
           }}
-          value={selected}
-          onChange={handleChange}
-          ampm={ampm}
-          disabled={disabled}
-          minDateTime={minDayjs}
-          maxDateTime={maxDayjs}
-          slotProps={{
-            textField: {
-              fullWidth: true,
-            },
-            popper: {
-              disablePortal: false,
-              style: { zIndex: 999999 },
-            },
-          }}
-        />
+        >
+          <MuiDateTimePicker
+            {...commonProps}
+            slotProps={{
+              ...commonProps.slotProps,
+              textField: {
+                ...commonProps.slotProps.textField,
+                id: `${fieldIdBase}-start`,
+              },
+            }}
+            label={startLabel ?? (label ? `${label} (start)` : "Start")}
+            value={selected[0]}
+            onChange={(
+              newStart,
+              context: PickerChangeHandlerContext<DateTimeValidationError>,
+            ) =>
+              commit([newStart, selected[1]], context.validationError === null)
+            }
+            minDateTime={minDayjs}
+            maxDateTime={startMax}
+          />
+          <MuiDateTimePicker
+            {...commonProps}
+            slotProps={{
+              ...commonProps.slotProps,
+              textField: {
+                ...commonProps.slotProps.textField,
+                id: `${fieldIdBase}-end`,
+              },
+            }}
+            label={endLabel ?? (label ? `${label} (end)` : "End")}
+            value={selected[1]}
+            onChange={(
+              newEnd,
+              context: PickerChangeHandlerContext<DateTimeValidationError>,
+            ) =>
+              commit([selected[0], newEnd], context.validationError === null)
+            }
+            minDateTime={endMin}
+            maxDateTime={maxDayjs}
+          />
+        </Box>
+        {helperText ? (
+          <FormHelperText id={helperTextId}>{helperText}</FormHelperText>
+        ) : null}
       </LocalizationProvider>
     </Box>
   );

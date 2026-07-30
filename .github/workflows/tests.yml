@@ -15,6 +15,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lockfile:
+    name: Verify dependency lock and security floor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: '0.11.32'
+          enable-cache: true
+      - run: uv lock --check
+      - run: python scripts/assert_lock_security.py
+
   # TypeScript type check of the frontend. Runs independently of the build
   # (Vite transpiles without type-checking), so this is the only gate that
   # catches type regressions such as passing a prop MUI does not accept.
@@ -74,9 +89,17 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - run: python -m pip install --upgrade build
+      - run: python -m pip install --upgrade build twine
       - run: python -m build
       - run: python scripts/assert_package_contents.py
+      - run: python -m twine check dist/*
+      - name: Prove the sdist can build a wheel
+        run: python -m pip wheel --no-deps --wheel-dir sdist-wheel dist/*.tar.gz
+      - name: Install and import the built wheel
+        run: |
+          python -m pip install --force-reinstall --no-deps sdist-wheel/*.whl
+          cd "$RUNNER_TEMP"
+          python -c "import st_mui; print(st_mui.__all__)"
 
   # Fast, browser-less guards across every supported Streamlit minor. The
   # oldest supported combination also runs on Python 3.10 so datetime parsing

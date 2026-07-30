@@ -1,11 +1,14 @@
 name: Build & Publish to PyPI (Manual)
 
-# Fallback for manual tag-based releases.
+# Fallback for manually retrying a tag-based release.
 # Automated releases are handled by release.yml via python-semantic-release.
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Existing v* tag to build and publish
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -13,8 +16,28 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_REF: ${{ inputs.ref }}
     steps:
+      - name: Validate release tag
+        run: |
+          case "$RELEASE_REF" in
+            v*) ;;
+            *) echo "ref must be an existing v* tag" >&2; exit 1 ;;
+          esac
+
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Confirm ref is an existing tag
+        run: |
+          git show-ref --verify --quiet "refs/tags/$RELEASE_REF" || {
+            echo "$RELEASE_REF is not an existing tag" >&2
+            exit 1
+          }
+          test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "$RELEASE_REF")"
 
       # Build all frontend components
       - uses: actions/setup-node@v6
@@ -31,8 +54,10 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: '3.13' }
       - run: |
-          python -m pip install --upgrade build
+          python -m pip install --upgrade build twine
           python -m build
+          python scripts/assert_package_contents.py
+          python -m twine check dist/*
 
       - uses: actions/upload-artifact@v7
         with:

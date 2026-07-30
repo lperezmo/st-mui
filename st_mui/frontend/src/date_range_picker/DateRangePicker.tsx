@@ -1,12 +1,17 @@
-import { FC, useCallback, useMemo, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import dayjs, { Dayjs } from "dayjs";
 import Box from "@mui/material/Box";
+import FormHelperText from "@mui/material/FormHelperText";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateRangePicker as MuiDateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
-import { DateRange } from "@mui/x-date-pickers-pro/models";
-import { applyMuiLicense } from "../shared/license";
+import { DatePicker as MuiDatePicker } from "@mui/x-date-pickers/DatePicker";
+import type {
+  DateValidationError,
+  DateView,
+  PickerChangeHandlerContext,
+} from "@mui/x-date-pickers/models";
+import { createPickerId } from "../shared/id";
 
 export type DateRangePickerState = {
   start_date: string | null;
@@ -19,13 +24,22 @@ export type DateRangePickerState = {
 
 export type DateRangePickerData = {
   label: string;
+  startLabel: string | null;
+  endLabel: string | null;
   startValue: string | null;
   endValue: string | null;
   minDate: string | null;
   maxDate: string | null;
-  calendars: number;
+  format: string;
+  helperText: string | null;
+  clearable: boolean;
+  readOnly: boolean;
+  disablePast: boolean;
+  disableFuture: boolean;
+  openTo: DateView | null;
+  views: DateView[] | null;
+  displayWeekNumber: boolean;
   disabled: boolean;
-  licenseKey: string | null;
 };
 
 type Props = {
@@ -40,21 +54,121 @@ type Props = {
   >["setTriggerValue"];
 };
 
+type DatePair = [Dayjs | null, Dayjs | null];
+type SerializedDatePair = {
+  start_date: string | null;
+  end_date: string | null;
+};
+
+function serializeDate(value: Dayjs | null): string | null | undefined {
+  if (value === null) {
+    return null;
+  }
+  return value.isValid() ? value.format("YYYY-MM-DD") : undefined;
+}
+
+function serializeDatePair(newValue: DatePair): SerializedDatePair | null {
+  const startValue = serializeDate(newValue[0]);
+  const endValue = serializeDate(newValue[1]);
+  if (startValue === undefined || endValue === undefined) {
+    return null;
+  }
+  if (
+    newValue[0] !== null &&
+    newValue[1] !== null &&
+    newValue[0].isAfter(newValue[1], "day")
+  ) {
+    return null;
+  }
+  return { start_date: startValue, end_date: endValue };
+}
+
+function sameDatePair(
+  left: SerializedDatePair,
+  right: SerializedDatePair,
+): boolean {
+  return (
+    left.start_date === right.start_date && left.end_date === right.end_date
+  );
+}
+
 export function updateDateRangeState(
-  newValue: DateRange<Dayjs>,
+  newValue: DatePair,
   setStateValue: Props["setStateValue"],
   setTriggerValue: Props["setTriggerValue"],
-): void {
-  const [start, end] = newValue;
-  const startValue = start?.isValid() ? start.format("YYYY-MM-DD") : null;
-  const endValue = end?.isValid() ? end.format("YYYY-MM-DD") : null;
+  previousValue?: SerializedDatePair,
+): boolean {
+  const serialized = serializeDatePair(newValue);
+  if (
+    serialized === null ||
+    (previousValue !== undefined && sameDatePair(serialized, previousValue))
+  ) {
+    return false;
+  }
 
-  setStateValue("start_date", startValue);
-  setStateValue("end_date", endValue);
-  setTriggerValue("range", {
-    start_date: startValue,
-    end_date: endValue,
-  });
+  setStateValue("start_date", serialized.start_date);
+  setStateValue("end_date", serialized.end_date);
+  setTriggerValue("range", serialized);
+  return true;
+}
+
+function parseDate(value: string | null): Dayjs | null {
+  return value ? dayjs(value) : null;
+}
+
+export function syncExternalDateRangeValue(
+  incoming: SerializedDatePair,
+  setStateValue: Props["setStateValue"],
+): DatePair {
+  setStateValue("start_date", incoming.start_date);
+  setStateValue("end_date", incoming.end_date);
+  return [parseDate(incoming.start_date), parseDate(incoming.end_date)];
+}
+
+function earlierDate(
+  left: Dayjs | undefined,
+  right: Dayjs | null,
+): Dayjs | undefined {
+  if (right === null || !right.isValid()) {
+    return left;
+  }
+  return left === undefined || right.isBefore(left, "day") ? right : left;
+}
+
+function laterDate(
+  left: Dayjs | undefined,
+  right: Dayjs | null,
+): Dayjs | undefined {
+  if (right === null || !right.isValid()) {
+    return left;
+  }
+  return left === undefined || right.isAfter(left, "day") ? right : left;
+}
+
+export function getDateRangeBounds(
+  minDate: Dayjs | undefined,
+  maxDate: Dayjs | undefined,
+  selected: DatePair,
+): { startMax: Dayjs | undefined; endMin: Dayjs | undefined } {
+  return {
+    startMax: earlierDate(maxDate, selected[1]),
+    endMin: laterDate(minDate, selected[0]),
+  };
+}
+
+export function shouldApplyDateRangeEdit(
+  nextValue: DatePair,
+  currentValue: DatePair,
+  options: { clearable: boolean; disabled: boolean; readOnly: boolean },
+): boolean {
+  if (options.disabled || options.readOnly) {
+    return false;
+  }
+  return !(
+    !options.clearable &&
+    ((nextValue[0] === null && currentValue[0] !== null) ||
+      (nextValue[1] === null && currentValue[1] !== null))
+  );
 }
 
 const DateRangePickerComponent: FC<Props> = ({
@@ -64,32 +178,78 @@ const DateRangePickerComponent: FC<Props> = ({
 }) => {
   const {
     label,
+    startLabel,
+    endLabel,
     startValue,
     endValue,
     minDate,
     maxDate,
-    calendars,
+    format,
+    helperText,
+    clearable,
+    readOnly,
+    disablePast,
+    disableFuture,
+    openTo,
+    views,
+    displayWeekNumber,
     disabled,
-    licenseKey,
   } = data;
 
-  applyMuiLicense(licenseKey);
+  const [selected, setSelected] = useState<DatePair>(() => [
+    parseDate(startValue),
+    parseDate(endValue),
+  ]);
+  const latestValue = useRef<SerializedDatePair>({
+    start_date: startValue,
+    end_date: endValue,
+  });
+  const fieldIdBase = useMemo(() => createPickerId("date-range-picker"), []);
+  const helperTextId = `${fieldIdBase}-helper`;
 
-  const initialValue = useMemo<DateRange<Dayjs>>(
-    () => [
-      startValue ? dayjs(startValue) : null,
-      endValue ? dayjs(endValue) : null,
-    ],
-    [startValue, endValue],
-  );
-  const [selected, setSelected] = useState<DateRange<Dayjs>>(initialValue);
+  useEffect(() => {
+    const incoming = { start_date: startValue, end_date: endValue };
+    if (!sameDatePair(incoming, latestValue.current)) {
+      latestValue.current = incoming;
+      setSelected(syncExternalDateRangeValue(incoming, setStateValue));
+    }
+  }, [startValue, endValue, setStateValue]);
 
-  const handleChange = useCallback(
-    (newValue: DateRange<Dayjs>) => {
+  const commit = useCallback(
+    (newValue: DatePair, valid: boolean) => {
+      if (
+        !shouldApplyDateRangeEdit(newValue, selected, {
+          clearable,
+          disabled,
+          readOnly,
+        })
+      ) {
+        return;
+      }
+
+      // Field typing passes through temporarily invalid Dayjs values. Keep
+      // those local so the input does not snap back, but only notify Python
+      // once both endpoints form a valid ordered range.
       setSelected(newValue);
-      updateDateRangeState(newValue, setStateValue, setTriggerValue);
+      if (!valid) {
+        return;
+      }
+      if (
+        !updateDateRangeState(
+          newValue,
+          setStateValue,
+          setTriggerValue,
+          latestValue.current,
+        )
+      ) {
+        return;
+      }
+      const serialized = serializeDatePair(newValue);
+      if (serialized !== null) {
+        latestValue.current = serialized;
+      }
     },
-    [setStateValue, setTriggerValue],
+    [clearable, disabled, readOnly, selected, setStateValue, setTriggerValue],
   );
 
   const minDayjs = useMemo(
@@ -100,31 +260,86 @@ const DateRangePickerComponent: FC<Props> = ({
     () => (maxDate ? dayjs(maxDate) : undefined),
     [maxDate],
   );
+  const { startMax, endMin } = getDateRangeBounds(minDayjs, maxDayjs, selected);
+
+  const commonProps = {
+    format,
+    disabled,
+    readOnly,
+    disablePast,
+    disableFuture,
+    openTo: openTo ?? undefined,
+    views: views ?? undefined,
+    displayWeekNumber,
+    slotProps: {
+      field: { clearable },
+      textField: {
+        fullWidth: true,
+        InputProps: {
+          "aria-describedby": helperText ? helperTextId : undefined,
+        },
+      },
+      popper: {
+        disablePortal: false,
+        style: { zIndex: 999999 },
+      },
+    },
+  };
 
   return (
     <Box sx={{ width: "100%", py: 0.5 }}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <MuiDateRangePicker
-          localeText={{
-            start: label ? `${label} (start)` : "Start",
-            end: label ? `${label} (end)` : "End",
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+            gap: 1.5,
           }}
-          value={selected}
-          onChange={handleChange}
-          disabled={disabled}
-          minDate={minDayjs}
-          maxDate={maxDayjs}
-          calendars={calendars as 1 | 2 | 3}
-          slotProps={{
-            textField: {
-              fullWidth: true,
-            },
-            popper: {
-              disablePortal: false,
-              style: { zIndex: 999999 },
-            },
-          }}
-        />
+        >
+          <MuiDatePicker
+            {...commonProps}
+            slotProps={{
+              ...commonProps.slotProps,
+              textField: {
+                ...commonProps.slotProps.textField,
+                id: `${fieldIdBase}-start`,
+              },
+            }}
+            label={startLabel ?? (label ? `${label} (start)` : "Start")}
+            value={selected[0]}
+            onChange={(
+              newStart,
+              context: PickerChangeHandlerContext<DateValidationError>,
+            ) =>
+              commit([newStart, selected[1]], context.validationError === null)
+            }
+            minDate={minDayjs}
+            maxDate={startMax}
+          />
+          <MuiDatePicker
+            {...commonProps}
+            slotProps={{
+              ...commonProps.slotProps,
+              textField: {
+                ...commonProps.slotProps.textField,
+                id: `${fieldIdBase}-end`,
+              },
+            }}
+            label={endLabel ?? (label ? `${label} (end)` : "End")}
+            value={selected[1]}
+            onChange={(
+              newEnd,
+              context: PickerChangeHandlerContext<DateValidationError>,
+            ) =>
+              commit([selected[0], newEnd], context.validationError === null)
+            }
+            minDate={endMin}
+            maxDate={maxDayjs}
+          />
+        </Box>
+        {helperText ? (
+          <FormHelperText id={helperTextId}>{helperText}</FormHelperText>
+        ) : null}
       </LocalizationProvider>
     </Box>
   );
