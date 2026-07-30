@@ -12,6 +12,7 @@ MINIMUM_VERSIONS = {
     # advisory in that set requires GitPython 3.1.55 or newer.
     "gitpython": (3, 1, 55),
 }
+PROJECT_FILES = (Path("pyproject.toml"), Path("st_mui/pyproject.toml"))
 
 
 def release_tuple(version: str) -> tuple[int, ...]:
@@ -30,6 +31,25 @@ def main() -> None:
     }
 
     failures = []
+    project_versions = {
+        path.as_posix(): tomllib.loads(path.read_text(encoding="utf-8"))["project"][
+            "version"
+        ]
+        for path in PROJECT_FILES
+    }
+    locked_project_version = resolved.get("st-mui")
+    expected_project_version = next(iter(project_versions.values()))
+    for path, version in project_versions.items():
+        if version != expected_project_version:
+            failures.append(
+                f"{path} version {version} does not match {expected_project_version}"
+            )
+    if locked_project_version != expected_project_version:
+        failures.append(
+            f"uv.lock st-mui version {locked_project_version!r} does not match "
+            f"project version {expected_project_version}"
+        )
+
     for package, minimum in MINIMUM_VERSIONS.items():
         version = resolved.get(package)
         if version is None:
@@ -44,7 +64,10 @@ def main() -> None:
     checked = ", ".join(
         f"{package}=={resolved[package]}" for package in MINIMUM_VERSIONS
     )
-    print(f"Dependency security floors satisfied: {checked}")
+    print(
+        f"Lock/project versions agree at {expected_project_version}; "
+        f"dependency security floors satisfied: {checked}"
+    )
 
 
 if __name__ == "__main__":
