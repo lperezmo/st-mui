@@ -5,8 +5,10 @@ Interactive demo of Material UI and MUI X components for Streamlit,
 with side-by-side comparisons against standard widgets.
 """
 
-import streamlit as st
 from datetime import date, time, datetime, timedelta
+from functools import partial
+
+import streamlit as st
 
 from st_mui import (
     date_picker,
@@ -105,6 +107,21 @@ def _banner_st():
     st.html(_ST_BANNER_DARK if _IS_DARK else _ST_BANNER_LIGHT)
 
 
+def _record_change(component_name):
+    """Make callback behavior visible without coupling it to widget state."""
+    state_key = f"_showcase_{component_name}_changes"
+    st.session_state[state_key] = st.session_state.get(state_key, 0) + 1
+
+
+def _change_callback(component_name):
+    return partial(_record_change, component_name)
+
+
+def _change_count(component_name):
+    count = st.session_state.get(f"_showcase_{component_name}_changes", 0)
+    st.caption(f"`on_change` callbacks observed this session: **{count}**")
+
+
 # -- Header ------------------------------------------------------------------
 _HEADER_GRADIENT = (
     "linear-gradient(135deg, #818cf8, #c4b5fd)"
@@ -125,10 +142,20 @@ st.html(f"""
 </div>
 """)
 
+metric_components, metric_new, metric_licenses, metric_tests = st.columns(4)
+metric_components.metric("Interactive widgets", "10")
+metric_new.metric("New in this PR", "4")
+metric_licenses.metric("New widget licenses", "100% MIT")
+metric_tests.metric("New feature scenarios", "13")
+
 # -- Sidebar: global controls ------------------------------------------------
 with st.sidebar:
     st.header("Global Settings")
     disabled = st.toggle("Disable all components", value=False)
+    st.caption(
+        "Use this to verify disabled and read-only interaction handling across "
+        "the whole gallery."
+    )
     st.divider()
     st.markdown(
         "**st-mui** brings production-grade Material UI components to Streamlit "
@@ -145,6 +172,13 @@ with st.sidebar:
     st.markdown("- :material/tune: Slider")
     st.markdown("- :material/star: Rating")
     st.markdown("- :material/table_view: DataGrid (Community)")
+    st.divider()
+    st.markdown("**New component feature tour**")
+    st.markdown(
+        "The last four tabs cover scalar identity, free-form multi-select, "
+        "generated and discrete marks, fractional and read-only ratings, "
+        "typed grid columns, controlled models, callbacks, and pagination."
+    )
 
 # -- Tabs for each component -------------------------------------------------
 (
@@ -716,47 +750,105 @@ selected = tree_view(
 with tab_autocomplete:
     st.subheader("Autocomplete")
     st.markdown(
-        "Searchable single- and multi-select inputs using MIT-licensed Material UI."
+        "Searchable single- and multi-select inputs using MIT-licensed Material UI. "
+        "The examples below exercise custom labels, typed scalar identity, disabled "
+        "options, free-form values, helper text, clearability, and callbacks."
     )
 
+    city_column, skills_column = st.columns(2)
+    with city_column:
+        st.markdown("#### Labeled values and disabled options")
+        _banner_mui()
+        city = autocomplete(
+            [
+                {"label": "Los Angeles", "value": "LAX"},
+                {"label": "New York", "value": "NYC"},
+                {"label": "Seattle", "value": "SEA"},
+                {
+                    "label": "Maintenance window",
+                    "value": "OFFLINE",
+                    "disabled": True,
+                },
+            ],
+            label="Destination",
+            value="LAX",
+            placeholder="Search cities",
+            helper_text="The UI label and returned value can differ",
+            clearable=True,
+            disabled=disabled,
+            on_change=_change_callback("autocomplete_city"),
+            key="autocomplete_city",
+        )
+        st.code(f"Returned value: {city!r}")
+        _change_count("autocomplete_city")
+
+    with skills_column:
+        st.markdown("#### Multi-select plus free-form entries")
+        _banner_mui()
+        skills = autocomplete(
+            ["Python", "TypeScript", "Rust"],
+            label="Skills",
+            value=["Python"],
+            multiple=True,
+            free_solo=True,
+            placeholder="Add a skill and press Enter",
+            helper_text="Suggestions become chips; custom strings are welcome",
+            clearable=True,
+            disabled=disabled,
+            on_change=_change_callback("autocomplete_skills"),
+            key="autocomplete_skills",
+        )
+        st.code(f"Returned values: {skills!r}")
+        _change_count("autocomplete_skills")
+
+    st.divider()
+    st.markdown("#### Scalar types retain their identity")
+    st.caption(
+        "Numeric `1`, string `'1'`, and boolean `True` are deliberately distinct. "
+        "This required-selection example also demonstrates `clearable=False`."
+    )
     _banner_mui()
-    city = autocomplete(
+    typed_value = autocomplete(
         [
-            {"label": "Los Angeles", "value": "LAX"},
-            {"label": "New York", "value": "NYC"},
-            {"label": "Seattle", "value": "SEA"},
-            {"label": "Unavailable", "value": "N/A", "disabled": True},
+            {"label": "Number: 1", "value": 1},
+            {"label": "String: '1'", "value": "1"},
+            {"label": "Boolean: True", "value": True},
         ],
-        label="Destination",
-        value="LAX",
-        placeholder="Search cities",
+        label="Typed JSON scalar",
+        value=1,
+        helper_text="Inspect repr(value) below to see the preserved Python type",
+        clearable=False,
         disabled=disabled,
-        key="autocomplete_city",
+        on_change=_change_callback("autocomplete_typed"),
+        key="autocomplete_typed",
     )
-    st.code(f"Selected value: {city}")
-
-    _banner_mui()
-    skills = autocomplete(
-        ["Python", "TypeScript", "Rust"],
-        label="Skills",
-        value=["Python"],
-        multiple=True,
-        free_solo=True,
-        helper_text="Choose suggestions or enter your own",
-        disabled=disabled,
-        key="autocomplete_skills",
-    )
-    st.code(f"Selected values: {skills}")
+    st.code(f"value={typed_value!r}  type={type(typed_value).__name__}")
+    _change_count("autocomplete_typed")
 
     with st.expander("Usage code"):
         st.code(
             """from st_mui import autocomplete
 
-selected = autocomplete(
-    [{"label": "Los Angeles", "value": "LAX"}, "Other"],
+destination = autocomplete(
+    [
+        {"label": "Los Angeles", "value": "LAX"},
+        {"label": "Temporarily unavailable", "value": "N/A", "disabled": True},
+    ],
     label="Destination",
-    multiple=False,
+    placeholder="Search cities",
+    helper_text="Labels can differ from returned values",
+    clearable=False,
+    on_change=handle_destination_change,
     key="destination",
+)
+
+skills = autocomplete(
+    ["Python", "TypeScript", "Rust"],
+    label="Skills",
+    value=["Python"],
+    multiple=True,
+    free_solo=True,
+    key="skills",
 )
 """,
             language="python",
@@ -768,38 +860,79 @@ selected = autocomplete(
 with tab_slider:
     st.subheader("Slider")
     st.markdown(
-        "Single-value and range sliders that update Streamlit when a drag is committed."
+        "Single-value and range sliders that update Streamlit when a drag is "
+        "committed. Generated marks are safety-capped; marks-only mode accepts "
+        "only the explicit values you provide."
     )
 
-    _banner_mui()
-    volume = slider(
-        "Volume",
-        35,
-        min_value=0,
-        max_value=100,
-        marks=True,
-        disabled=disabled,
-        key="slider_volume",
-    )
-    st.code(f"Volume: {volume}")
+    volume_column, budget_column = st.columns(2)
+    with volume_column:
+        st.markdown("#### Single value with generated marks")
+        _banner_mui()
+        volume = slider(
+            "Volume",
+            40,
+            min_value=0,
+            max_value=100,
+            step=10,
+            marks=True,
+            value_label_display="auto",
+            disabled=disabled,
+            on_change=_change_callback("slider_volume"),
+            key="slider_volume",
+        )
+        st.metric("Committed volume", volume)
+        _change_count("slider_volume")
 
+    with budget_column:
+        st.markdown("#### Range with custom labeled marks")
+        _banner_mui()
+        budget = slider(
+            "Budget",
+            (25, 75),
+            min_value=0,
+            max_value=100,
+            step=5,
+            marks=[
+                {"value": 0, "label": "$0"},
+                {"value": 50, "label": "$50"},
+                {"value": 100, "label": "$100"},
+            ],
+            value_label_display="on",
+            disabled=disabled,
+            on_change=_change_callback("slider_budget"),
+            key="slider_budget",
+        )
+        st.code(f"Committed range: {budget}")
+        _change_count("slider_budget")
+
+    st.divider()
+    st.markdown("#### Discrete marks-only selection")
+    st.caption(
+        "`step=None` prevents intermediate values, which is useful for named tiers "
+        "or intentionally irregular numeric choices."
+    )
     _banner_mui()
-    budget = slider(
-        "Budget",
-        (25, 75),
+    capacity = slider(
+        "Deployment capacity",
+        25,
         min_value=0,
         max_value=100,
-        step=5,
+        step=None,
         marks=[
-            {"value": 0, "label": "$0"},
-            {"value": 50, "label": "$50"},
-            {"value": 100, "label": "$100"},
+            {"value": 0, "label": "Off"},
+            {"value": 10, "label": "Canary"},
+            {"value": 25, "label": "Quarter"},
+            {"value": 50, "label": "Half"},
+            {"value": 100, "label": "Full"},
         ],
-        value_label_display="on",
+        value_label_display="off",
         disabled=disabled,
-        key="slider_budget",
+        on_change=_change_callback("slider_capacity"),
+        key="slider_capacity",
     )
-    st.code(f"Budget range: {budget}")
+    st.code(f"Only an explicit mark can be returned: {capacity}")
+    _change_count("slider_capacity")
 
     with st.expander("Usage code"):
         st.code(
@@ -811,7 +944,24 @@ low, high = slider(
     min_value=0,
     max_value=100,
     step=5,
+    marks=[
+        {"value": 0, "label": "$0"},
+        {"value": 50, "label": "$50"},
+        {"value": 100, "label": "$100"},
+    ],
+    value_label_display="on",
+    on_change=handle_price_change,
     key="price",
+)
+
+tier = slider(
+    "Capacity",
+    value=25,
+    min_value=0,
+    max_value=100,
+    step=None,
+    marks=[{"value": 0, "label": "Off"}, {"value": 25, "label": "Quarter"}],
+    key="capacity",
 )
 """,
             language="python",
@@ -822,28 +972,77 @@ low, high = slider(
 # ============================================================================
 with tab_rating:
     st.subheader("Rating")
-    st.markdown("An accessible star rating with fractional precision.")
-
-    _banner_mui()
-    score = rating(
-        "How useful is st-mui?",
-        value=4,
-        precision=0.5,
-        disabled=disabled,
-        key="rating_useful",
+    st.markdown(
+        "Accessible star ratings with configurable size, maximum, fractional "
+        "precision, clearability, disabled state, and read-only presentation."
     )
-    st.code(f"Rating: {score}")
 
-    _banner_mui()
-    readonly_score = rating(
-        "Read-only score",
-        value=7.5,
-        max_value=10,
-        precision=0.5,
-        read_only=True,
-        key="rating_readonly",
-    )
-    st.code(f"Read-only rating: {readonly_score}")
+    interactive_column, readonly_column = st.columns(2)
+    with interactive_column:
+        st.markdown("#### Interactive half-star rating")
+        _banner_mui()
+        score = rating(
+            "How useful is st-mui?",
+            value=4,
+            precision=0.5,
+            size="large",
+            clearable=True,
+            disabled=disabled,
+            on_change=_change_callback("rating_useful"),
+            key="rating_useful",
+        )
+        st.code(f"Rating: {score!r}")
+        _change_count("rating_useful")
+
+    with readonly_column:
+        st.markdown("#### Read-only ten-star score")
+        _banner_mui()
+        readonly_score = rating(
+            "Aggregate score",
+            value=7.5,
+            max_value=10,
+            precision=0.5,
+            size="medium",
+            read_only=True,
+            clearable=False,
+            key="rating_readonly",
+        )
+        st.code(f"Read-only rating: {readonly_score!r}")
+
+    st.divider()
+    st.markdown("#### Size and precision gallery")
+    small_column, medium_column, large_column = st.columns(3)
+    with small_column:
+        small_score = rating(
+            "Small / whole stars",
+            value=3,
+            precision=1,
+            size="small",
+            disabled=disabled,
+            key="rating_small",
+        )
+        st.code(repr(small_score))
+    with medium_column:
+        medium_score = rating(
+            "Medium / half stars",
+            value=3.5,
+            precision=0.5,
+            size="medium",
+            disabled=disabled,
+            key="rating_medium",
+        )
+        st.code(repr(medium_score))
+    with large_column:
+        large_score = rating(
+            "Large / quarter stars",
+            value=3.75,
+            precision=0.25,
+            size="large",
+            clearable=False,
+            disabled=disabled,
+            key="rating_large",
+        )
+        st.code(repr(large_score))
 
     with st.expander("Usage code"):
         st.code(
@@ -854,7 +1053,20 @@ score = rating(
     value=3.5,
     max_value=5,
     precision=0.5,
+    size="large",
+    clearable=True,
+    on_change=handle_score_change,
     key="score",
+)
+
+readonly_score = rating(
+    "Aggregate score",
+    value=7.5,
+    max_value=10,
+    precision=0.5,
+    read_only=True,
+    clearable=False,
+    key="aggregate",
 )
 """,
             language="python",
@@ -864,35 +1076,205 @@ score = rating(
 # DATA GRID TAB
 # ============================================================================
 with tab_grid:
-    st.subheader("DataGrid")
+    st.subheader("DataGrid (Community)")
     st.markdown(
         "The MIT-licensed MUI X Community Data Grid with selection, sorting, "
-        "filtering, and pagination."
+        "filtering, pagination, typed columns, density controls, custom row IDs, "
+        "and one composite callback. Community edition intentionally supports one "
+        "sort and one filter item at a time."
     )
 
+    grid_rows = [
+        {
+            "key": "emp-001",
+            "name": "Ada Lovelace",
+            "team": "Platform",
+            "score": 98,
+            "active": True,
+        },
+        {
+            "key": "emp-002",
+            "name": "Grace Hopper",
+            "team": "Research",
+            "score": 99,
+            "active": True,
+        },
+        {
+            "key": "emp-003",
+            "name": "Margaret Hamilton",
+            "team": "Platform",
+            "score": 97,
+            "active": True,
+        },
+        {
+            "key": "emp-004",
+            "name": "Alan Turing",
+            "team": "Research",
+            "score": 96,
+            "active": False,
+        },
+        {
+            "key": "emp-005",
+            "name": "Katherine Johnson",
+            "team": "Analytics",
+            "score": 99,
+            "active": True,
+        },
+        {
+            "key": "emp-006",
+            "name": "Edsger Dijkstra",
+            "team": "Platform",
+            "score": 95,
+            "active": False,
+        },
+        {
+            "key": "emp-007",
+            "name": "Radia Perlman",
+            "team": "Infrastructure",
+            "score": 98,
+            "active": True,
+        },
+        {
+            "key": "emp-008",
+            "name": "Donald Knuth",
+            "team": "Research",
+            "score": 97,
+            "active": True,
+        },
+        {
+            "key": "emp-009",
+            "name": "Barbara Liskov",
+            "team": "Platform",
+            "score": 99,
+            "active": True,
+        },
+        {
+            "key": "emp-010",
+            "name": "Mary Jackson",
+            "team": "Analytics",
+            "score": 96,
+            "active": True,
+        },
+        {
+            "key": "emp-011",
+            "name": "Guido van Rossum",
+            "team": "Infrastructure",
+            "score": 94,
+            "active": True,
+        },
+        {
+            "key": "emp-012",
+            "name": "Frances Allen",
+            "team": "Research",
+            "score": 98,
+            "active": False,
+        },
+    ]
+
+    st.markdown("#### Fully configured typed grid")
+    st.caption(
+        "Starts sorted by score with active rows filtered in. Clear the filter, "
+        "change pages, select rows, and inspect the controlled model below."
+    )
     _banner_mui()
     grid_state = data_grid(
-        rows=[
-            {"id": 1, "name": "Ada Lovelace", "role": "Engineer", "score": 98},
-            {"id": 2, "name": "Grace Hopper", "role": "Admiral", "score": 99},
-            {"id": 3, "name": "Margaret Hamilton", "role": "Lead", "score": 97},
-            {"id": 4, "name": "Alan Turing", "role": "Researcher", "score": 96},
-        ],
+        rows=grid_rows,
         columns=[
-            {"field": "name", "header_name": "Name", "min_width": 180},
             {
-                "field": "role",
-                "type": "singleSelect",
-                "value_options": ["Engineer", "Admiral", "Lead", "Researcher"],
+                "field": "key",
+                "header_name": "Employee ID",
+                "width": 120,
+                "sortable": False,
+                "filterable": False,
+                "resizable": False,
             },
-            {"field": "score", "type": "number", "width": 110},
+            {
+                "field": "name",
+                "header_name": "Name",
+                "description": "Full employee name",
+                "min_width": 180,
+                "flex": 1,
+            },
+            {
+                "field": "team",
+                "header_name": "Team",
+                "type": "singleSelect",
+                "value_options": [
+                    "Platform",
+                    "Research",
+                    "Analytics",
+                    "Infrastructure",
+                ],
+                "min_width": 140,
+            },
+            {
+                "field": "score",
+                "header_name": "Score",
+                "type": "number",
+                "width": 110,
+                "align": "right",
+                "header_align": "right",
+            },
+            {
+                "field": "active",
+                "header_name": "Active",
+                "type": "boolean",
+                "width": 100,
+            },
         ],
+        id_field="key",
+        selected_rows=["emp-002", "emp-005"],
+        sort_model=[{"field": "score", "sort": "desc"}],
+        filter_model={
+            "items": [
+                {
+                    "id": "active-filter",
+                    "field": "active",
+                    "operator": "is",
+                    "value": True,
+                }
+            ]
+        },
         page_size=5,
+        page_size_options=(5, 10),
+        height=440,
         checkbox_selection=True,
+        density="compact",
         disabled=disabled,
+        on_change=_change_callback("data_grid_configured"),
         key="community_grid",
     )
     st.json(grid_state)
+    _change_count("data_grid_configured")
+
+    st.divider()
+    st.markdown("#### Zero-config column inference")
+    st.caption(
+        "No `columns` argument is supplied. Fields are inferred in stable first-seen "
+        "order across every row, including fields that appear after row one."
+    )
+    _banner_mui()
+    inferred_grid_state = data_grid(
+        rows=[
+            {"id": 1, "name": "First row"},
+            {"id": 2, "name": "Adds priority", "priority": 2},
+            {
+                "id": 3,
+                "name": "Adds shipped",
+                "priority": 1,
+                "shipped": True,
+            },
+        ],
+        page_size=3,
+        page_size_options=(3,),
+        height=280,
+        density="comfortable",
+        disabled=disabled,
+        on_change=_change_callback("data_grid_inferred"),
+        key="inferred_grid",
+    )
+    st.json(inferred_grid_state)
+    _change_count("data_grid_inferred")
 
     with st.expander("Usage code"):
         st.code(
@@ -900,11 +1282,24 @@ with tab_grid:
 
 state = data_grid(
     rows=[
-        {"id": 1, "name": "Ada", "score": 98},
-        {"id": 2, "name": "Grace", "score": 99},
+        {"key": "emp-1", "name": "Ada", "score": 98, "active": True},
+        {"key": "emp-2", "name": "Grace", "score": 99, "active": True},
     ],
-    columns=["name", {"field": "score", "type": "number"}],
+    columns=[
+        {"field": "name", "header_name": "Name", "min_width": 180, "flex": 1},
+        {"field": "score", "type": "number", "width": 110},
+        {"field": "active", "type": "boolean", "width": 100},
+    ],
+    id_field="key",
+    selected_rows=["emp-2"],
+    sort_model=[{"field": "score", "sort": "desc"}],
+    filter_model={"items": []},
+    page_size=5,
+    page_size_options=(5, 10),
+    height=440,
     checkbox_selection=True,
+    density="compact",
+    on_change=handle_grid_change,
     key="people",
 )
 """,

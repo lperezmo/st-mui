@@ -45,7 +45,8 @@ function isDarkBackground(bgColor: string): boolean {
     const v = c / 255;
     return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
   };
-  const lum = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+  const lum =
+    0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
   return lum < 0.5;
 }
 
@@ -92,16 +93,16 @@ export function getStreamlitMuiTheme(): Theme {
   // Read Streamlit's actual theme values
   const secondaryBg = getCSSVar(
     "--st-secondary-background-color",
-    isDark ? "#262730" : "#f0f2f6"
+    isDark ? "#262730" : "#f0f2f6",
   );
   const textColor = getCSSVar(
     "--st-text-color",
-    isDark ? "#fafafa" : "#262730"
+    isDark ? "#fafafa" : "#262730",
   );
   const grayColor = getCSSVar("--st-gray-color", "#808495");
   const font = getCSSVar(
     "--st-font",
-    '"Source Sans Pro", "Source Sans 3", system-ui, -apple-system, sans-serif'
+    '"Source Sans Pro", "Source Sans 3", system-ui, -apple-system, sans-serif',
   );
   const borderRadius = getCSSVar("--st-base-radius", "8px");
   const background = bgColor || (isDark ? "#0e1117" : "#ffffff");
@@ -112,7 +113,11 @@ export function getStreamlitMuiTheme(): Theme {
       primary: { main: primary },
       secondary: { main: grayColor },
       background: {
-        default: "transparent",
+        // DataGrid derives CSS variables by decomposing this color. The CSS
+        // keyword "transparent" is not a decomposable MUI color and crashes
+        // the production grid bundle, so keep the theme color concrete while
+        // ScopedCssBaseline remains visually transparent below.
+        default: background,
         paper: secondaryBg,
       },
       text: {
