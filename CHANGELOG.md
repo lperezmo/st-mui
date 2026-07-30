@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.5.0 (2026-07-30)
+
+### Features
+
+- Expand MIT picker components and harden releases
+  ([`0c93705`](https://github.com/lperezmo/st-mui/commit/0c93705175c5d1329291b79cc44ba86e97c3045b))
+
+
 ## v0.4.0 (2026-07-30)
 
 ### Bug Fixes
