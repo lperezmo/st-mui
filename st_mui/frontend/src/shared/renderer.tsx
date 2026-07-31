@@ -64,7 +64,13 @@ export function createMuiRenderer<
       emotionCaches.set(parentElement, emotionCache);
     }
 
-    const theme = getStreamlitMuiTheme();
+    // Streamlit declares its --st-* custom properties on the element
+    // container, not on :root, so the theme must be read from inside the app
+    // subtree. `host` covers the shadow-root case if isolation is ever enabled.
+    const themeHost =
+      (parentElement as unknown as { host?: Element }).host ??
+      (parentElement as unknown as Element);
+    const theme = getStreamlitMuiTheme(themeHost);
 
     reactRoot.render(
       <StrictMode>
