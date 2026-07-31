@@ -116,6 +116,9 @@ def date_time_range_picker(
     deprecated and ignored. The original parameters through ``key`` retain
     their positional API; new controls are keyword-only. Returned datetimes
     remain timezone-naive wall-clock values.
+
+    Both ``value`` datetimes must sit on the ``minutes_step`` grid; a minute
+    that is not a multiple of ``minutes_step`` renders as a validation error.
     """
     if not isinstance(label, str):
         raise TypeError("label must be a string")

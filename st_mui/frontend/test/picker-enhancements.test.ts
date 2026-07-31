@@ -20,6 +20,7 @@ import {
   syncExternalDateTimePickerValue,
 } from "../src/date_time_picker/DateTimePicker";
 import { createPickerId } from "../src/shared/id";
+import { resolveTimeSteps } from "../src/shared/timeSteps";
 
 describe("picker accessibility IDs", () => {
   it("creates stable-prefix IDs that remain unique across independent roots", () => {
@@ -114,6 +115,19 @@ describe("external picker value synchronization", () => {
       "selected_datetime",
       "2026-08-04T10:30:00.000",
     );
+  });
+});
+
+describe("minute-step option wiring", () => {
+  it("offers only minutes the picker will accept", () => {
+    expect(resolveTimeSteps(15)).toEqual({ minutes: 15 });
+    expect(resolveTimeSteps(30)).toEqual({ minutes: 30 });
+  });
+
+  it("leaves the default step on MUI's own spacing", () => {
+    // minutesStep=1 accepts every minute, so MUI's 5-minute default cannot
+    // offer an invalid choice. Overriding it would list all 60 minutes.
+    expect(resolveTimeSteps(1)).toBeUndefined();
   });
 });
 

@@ -74,7 +74,11 @@ def date_time_picker(
     views : sequence of supported date/time views or None
         Views users can navigate through.
     minutes_step : int
-        Minute increment between 1 and 60.
+        Minute increment between 1 and 60. ``value`` must sit on the same
+        grid; a minute that is not a multiple of ``minutes_step`` renders as
+        a validation error. Round dynamic defaults such as ``datetime.now()``
+        up to the next boundary, and hold them in ``st.session_state`` so a
+        rerun does not replace the user's in-progress selection.
     format : str or None
         Optional MUI display format. ``None`` uses the locale default.
 
