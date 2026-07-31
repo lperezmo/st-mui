@@ -1,6 +1,32 @@
 # CHANGELOG
 
 
+## v0.5.2 (2026-07-31)
+
+### Bug Fixes
+
+- Align picker minute options with minutes_step
+  ([`e88df74`](https://github.com/lperezmo/st-mui/commit/e88df745439b37b6fade82f17318d997dae2d08d))
+
+MUI validates a picker value against minutesStep, but the digital clock kept listing its own default
+  minutes, so a value off the step grid rendered as a red validation error while the offered options
+  invited users to pick another one that would fail the same way. Forward the step as timeSteps in
+  TimePicker, DateTimePicker, and DateTimeRangePicker.
+
+Leave the default step of 1 on MUI's own spacing. It accepts every minute, so its 5-minute default
+  cannot offer an invalid choice, and overriding it would replace a 12-entry minute column with a
+  60-entry one for every caller who never set the option.
+
+The showcase also rebuilt its controlled defaults on every rerun: each datetime.now() and
+  date.today() call produced a newer value that overwrote the user's in-progress selection, and with
+  minutes_step set it drifted off the grid into the same red state. Anchor the demo clock once in
+  session state, round it up to the next quarter hour, and give the disable_past demos a day of
+  headroom so the default cannot fall into the past while a session stays open.
+
+Document the alignment rule on the picker docstrings and in the README, and fix the usage snippets
+  that still paired datetime.now() with minutes_step=15.
+
+
 ## v0.5.1 (2026-07-30)
 
 ### Bug Fixes
