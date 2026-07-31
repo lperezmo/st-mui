@@ -6,6 +6,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker as MuiTimePicker } from "@mui/x-date-pickers/TimePicker";
 import { createPickerId } from "../shared/id";
+import { resolveTimeSteps } from "../shared/timeSteps";
 import type {
   PickerChangeHandlerContext,
   TimeValidationError,
@@ -176,6 +177,7 @@ const TimePickerComponent: FC<Props> = ({ data, setStateValue }) => {
           openTo={openTo ?? undefined}
           views={views ?? undefined}
           minutesStep={minutesStep}
+          timeSteps={resolveTimeSteps(minutesStep)}
           format={format ?? undefined}
           slotProps={{
             field: {

@@ -73,7 +73,13 @@ from st_mui import (
 
 t = time_picker(label="Pick a time", value=time(9, 30), ampm=True, key="my_time")
 
-dt = date_time_picker(label="Select date & time", value=datetime.now(), key="my_datetime")
+# A default recomputed on every rerun replaces the user's in-progress
+# selection, so anchor dynamic values in session state.
+if "start" not in st.session_state:
+    st.session_state["start"] = datetime.now().replace(second=0, microsecond=0)
+start_value = st.session_state["start"]
+
+dt = date_time_picker(label="Select date & time", value=start_value, key="my_datetime")
 
 d = date_picker(label="Pick a date", value=date.today(), key="my_date")
 
@@ -85,7 +91,7 @@ start, end = date_range_picker(
 
 start_dt, end_dt = date_time_range_picker(
     label="Event",
-    value=(datetime.now(), datetime.now() + timedelta(hours=2)),
+    value=(start_value, start_value + timedelta(hours=2)),
     key="my_dt_range",
 )
 
@@ -130,6 +136,11 @@ grid_state = data_grid(
   intentionally ignored.
 - The range picker `on_change` callback runs once when either the start or end
   value changes.
+- `minutes_step` constrains which minutes the picker accepts, so a `value`
+  whose minute is not a multiple of the step renders in a validation error
+  state. Round dynamic defaults such as `datetime.now()` up to the next
+  boundary, and hold them in `st.session_state` so a rerun does not replace
+  the user's in-progress selection.
 - All five date/time widgets support helper text, clearability, read-only mode,
   past/future guards, configurable initial/available views, and keyboard input.
   Date widgets can show ISO week numbers; time widgets support minute-step and

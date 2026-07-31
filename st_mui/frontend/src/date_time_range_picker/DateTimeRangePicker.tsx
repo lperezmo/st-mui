@@ -13,6 +13,7 @@ import type {
 } from "@mui/x-date-pickers/models";
 import { serializeWallClockDateTime } from "../shared/datetime";
 import { createPickerId } from "../shared/id";
+import { resolveTimeSteps } from "../shared/timeSteps";
 
 export type DateTimeRangePickerState = {
   start_datetime: string | null;
@@ -283,6 +284,7 @@ const DateTimeRangePickerComponent: FC<Props> = ({
     openTo: openTo ?? undefined,
     views: views ?? undefined,
     minutesStep,
+    timeSteps: resolveTimeSteps(minutesStep),
     slotProps: {
       field: { clearable },
       textField: {

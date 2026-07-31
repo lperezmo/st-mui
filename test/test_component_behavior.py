@@ -1,5 +1,8 @@
 """Behavioral regression tests for the Python component wrappers."""
 
+# Picker values intentionally exercise timezone-naive wall-clock datetimes.
+# ruff: noqa: DTZ001
+
 from __future__ import annotations
 
 import importlib

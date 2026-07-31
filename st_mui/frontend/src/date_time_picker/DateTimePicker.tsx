@@ -7,6 +7,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker as MuiDateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { serializeWallClockDateTime } from "../shared/datetime";
 import { createPickerId } from "../shared/id";
+import { resolveTimeSteps } from "../shared/timeSteps";
 import type {
   DateOrTimeView,
   DateTimeValidationError,
@@ -175,6 +176,7 @@ const DateTimePickerComponent: FC<Props> = ({ data, setStateValue }) => {
           openTo={openTo ?? undefined}
           views={views ?? undefined}
           minutesStep={minutesStep}
+          timeSteps={resolveTimeSteps(minutesStep)}
           format={format ?? undefined}
           slotProps={{
             field: {

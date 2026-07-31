@@ -73,7 +73,9 @@ def time_picker(
     views : sequence of {"hours", "minutes", "seconds"} or None
         Clock views users can navigate through.
     minutes_step : int
-        Minute increment between 1 and 60.
+        Minute increment between 1 and 60. ``value`` must sit on the same
+        grid; a minute that is not a multiple of ``minutes_step`` renders as
+        a validation error.
     format : str or None
         Optional MUI display format. ``None`` uses the locale default.
 

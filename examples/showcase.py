@@ -6,7 +6,7 @@ with side-by-side comparisons against standard widgets.
 """
 
 # Picker values intentionally use naive local wall-clock datetimes.
-# ruff: noqa: DTZ001, DTZ005, DTZ011
+# ruff: noqa: DTZ001, DTZ005
 
 from datetime import date, datetime, time, timedelta
 from functools import partial
@@ -125,6 +125,36 @@ def _change_count(component_name):
     st.caption(f"`on_change` callbacks observed this session: **{count}**")
 
 
+def _ceil_to_quarter_hour(value: datetime) -> datetime:
+    """Return the first :00, :15, :30, or :45 boundary at or after ``value``.
+
+    Pickers configured with ``minutes_step=15`` reject a value whose minute is
+    not a multiple of 15, so an unaligned default renders as a red validation
+    error instead of a usable widget.
+    """
+    truncated = value.replace(second=0, microsecond=0)
+    if truncated < value:
+        truncated += timedelta(minutes=1)
+    return truncated + timedelta(minutes=-truncated.minute % 15)
+
+
+# Dynamic defaults must stay stable across Streamlit reruns. A fresh
+# datetime.now() on every rerun feeds the components a newer controlled value,
+# which overwrites whatever the user is in the middle of selecting.
+if "_showcase_datetime_anchor" not in st.session_state:
+    st.session_state["_showcase_datetime_anchor"] = datetime.now().replace(
+        second=0, microsecond=0
+    )
+_SHOWCASE_NOW = st.session_state["_showcase_datetime_anchor"]
+_SHOWCASE_QUARTER_HOUR = _ceil_to_quarter_hour(_SHOWCASE_NOW)
+_SHOWCASE_TODAY = _SHOWCASE_NOW.date()
+
+# Demos that combine disable_past with a frozen anchor need enough headroom
+# that the default stays in the future for the whole session. An hour of slack
+# would put the value back in the past, and back in the red, after an hour.
+_SHOWCASE_APPOINTMENT = _SHOWCASE_QUARTER_HOUR + timedelta(days=1)
+
+
 # -- Header ------------------------------------------------------------------
 _HEADER_GRADIENT = (
     "linear-gradient(135deg, #818cf8, #c4b5fd)"
@@ -145,11 +175,13 @@ st.html(f"""
 </div>
 """)
 
-metric_components, metric_new, metric_licenses, metric_tests = st.columns(4)
-metric_components.metric("Interactive widgets", "10")
-metric_new.metric("Picker APIs", "5 expanded")
-metric_licenses.metric("Widget licenses", "100% MIT")
-metric_tests.metric("Range runtime", "No Pro code")
+st.caption(
+    ":violet[**10 interactive widgets**] · "
+    ":blue[**5 expanded picker APIs**] · "
+    ":green[**100% MIT widget licenses**] · "
+    ":orange[**No Pro range runtime**]",
+    text_alignment="center",
+)
 
 # -- Sidebar: global controls ------------------------------------------------
 with st.sidebar:
@@ -327,7 +359,7 @@ with tab_datetime:
         _banner_mui()
         dt_mui1 = date_time_picker(
             label="Select date & time",
-            value=datetime.now(),
+            value=_SHOWCASE_NOW,
             disabled=disabled,
             key="dtp_basic",
         )
@@ -337,13 +369,13 @@ with tab_datetime:
         _banner_st()
         dt_st1_date = st.date_input(
             "Select date",
-            value=datetime.now().date(),
+            value=_SHOWCASE_NOW.date(),
             disabled=disabled,
             key="st_dt_basic_date",
         )
         dt_st1_time = st.time_input(
             "Select time",
-            value=datetime.now().time(),
+            value=_SHOWCASE_NOW.time(),
             disabled=disabled,
             key="st_dt_basic_time",
         )
@@ -359,9 +391,9 @@ with tab_datetime:
         _banner_mui()
         dt_mui2 = date_time_picker(
             label="Next 7 days only",
-            value=datetime.now() + timedelta(hours=1),
-            min_datetime=datetime.now(),
-            max_datetime=datetime.now() + timedelta(days=7),
+            value=_SHOWCASE_APPOINTMENT,
+            min_datetime=_SHOWCASE_QUARTER_HOUR,
+            max_datetime=_SHOWCASE_QUARTER_HOUR + timedelta(days=7),
             ampm=False,
             helper_text="Future appointments in 15-minute increments",
             disable_past=True,
@@ -378,15 +410,15 @@ with tab_datetime:
         _banner_st()
         dt_st2_date = st.date_input(
             "Next 7 days",
-            value=datetime.now().date(),
-            min_value=datetime.now().date(),
-            max_value=(datetime.now() + timedelta(days=7)).date(),
+            value=_SHOWCASE_APPOINTMENT.date(),
+            min_value=_SHOWCASE_QUARTER_HOUR.date(),
+            max_value=(_SHOWCASE_QUARTER_HOUR + timedelta(days=7)).date(),
             disabled=disabled,
             key="st_dt_bounded_date",
         )
         dt_st2_time = st.time_input(
             "Appointment time",
-            value=(datetime.now() + timedelta(hours=1)).time(),
+            value=_SHOWCASE_APPOINTMENT.time(),
             step=timedelta(minutes=15),
             disabled=disabled,
             key="st_dt_bounded_time",
@@ -413,11 +445,18 @@ with tab_datetime:
             """from st_mui import date_time_picker
 from datetime import datetime, timedelta
 
+# minutes_step=15 means the value must land on a quarter hour, and the anchor
+# must be stable or every rerun replaces the user's in-progress selection.
+if "anchor" not in st.session_state:
+    now = datetime.now().replace(second=0, microsecond=0)
+    st.session_state["anchor"] = now + timedelta(minutes=-now.minute % 15)
+anchor = st.session_state["anchor"]
+
 selected = date_time_picker(
     label="Select date & time",
-    value=datetime.now(),
-    min_datetime=datetime.now(),
-    max_datetime=datetime.now() + timedelta(days=7),
+    value=anchor + timedelta(days=1),
+    min_datetime=anchor,
+    max_datetime=anchor + timedelta(days=7),
     ampm=False,
     disable_past=True,
     views=["day", "hours", "minutes"],
@@ -446,7 +485,7 @@ with tab_date:
         _banner_mui()
         d_mui1 = date_picker(
             label="Pick any date",
-            value=date.today(),
+            value=_SHOWCASE_TODAY,
             disabled=disabled,
             key="dp_basic",
         )
@@ -456,7 +495,7 @@ with tab_date:
         _banner_st()
         d_st1 = st.date_input(
             "Pick any date",
-            value=date.today(),
+            value=_SHOWCASE_TODAY,
             disabled=disabled,
             key="st_date_basic",
         )
@@ -526,7 +565,7 @@ with tab_date:
     _banner_mui()
     d_mui4 = date_picker(
         label="Next review",
-        value=date.today() + timedelta(days=30),
+        value=_SHOWCASE_TODAY + timedelta(days=30),
         helper_text="Past dates are disabled; this value is read-only.",
         read_only=True,
         disable_past=True,
@@ -543,7 +582,7 @@ from datetime import date
 
 selected = date_picker(
     label="Pick a date",
-    value=date.today(),
+    value=_SHOWCASE_TODAY,
     min_date=date(2026, 1, 1),
     max_date=date(2026, 12, 31),
     format="MM/DD/YYYY",
@@ -575,7 +614,7 @@ with tab_daterange:
         _banner_mui()
         dr = date_range_picker(
             label="Trip dates",
-            value=(date.today(), date.today() + timedelta(days=7)),
+            value=(_SHOWCASE_TODAY, _SHOWCASE_TODAY + timedelta(days=7)),
             start_label="Depart",
             end_label="Return",
             helper_text="The return date can never precede departure.",
@@ -592,7 +631,7 @@ with tab_daterange:
         _banner_st()
         dr_st = st.date_input(
             "Trip dates",
-            value=(date.today(), date.today() + timedelta(days=7)),
+            value=(_SHOWCASE_TODAY, _SHOWCASE_TODAY + timedelta(days=7)),
             disabled=disabled,
             key="st_daterange_basic",
         )
@@ -659,7 +698,7 @@ from datetime import date, timedelta
 
 start, end = date_range_picker(
     label="Trip dates",
-    value=(date.today(), date.today() + timedelta(days=7)),
+    value=(_SHOWCASE_TODAY, _SHOWCASE_TODAY + timedelta(days=7)),
     min_date=date(2026, 1, 1),
     max_date=date(2026, 12, 31),
     start_label="Depart",
@@ -693,8 +732,8 @@ with tab_dtrange:
         dtr = date_time_range_picker(
             label="Event",
             value=(
-                datetime.now() + timedelta(hours=1),
-                datetime.now() + timedelta(hours=3),
+                _SHOWCASE_APPOINTMENT,
+                _SHOWCASE_APPOINTMENT + timedelta(hours=2),
             ),
             start_label="Starts",
             end_label="Ends",
@@ -758,9 +797,16 @@ with tab_dtrange:
             """from st_mui import date_time_range_picker
 from datetime import datetime, timedelta
 
+# minutes_step=15 means both endpoints must land on a quarter hour, and the
+# anchor must be stable or every rerun replaces the user's selection.
+if "anchor" not in st.session_state:
+    now = datetime.now().replace(second=0, microsecond=0)
+    st.session_state["anchor"] = now + timedelta(minutes=-now.minute % 15)
+anchor = st.session_state["anchor"]
+
 start, end = date_time_range_picker(
     label="Event",
-    value=(datetime.now(), datetime.now() + timedelta(hours=2)),
+    value=(anchor, anchor + timedelta(hours=2)),
     start_label="Starts",
     end_label="Ends",
     ampm=False,
