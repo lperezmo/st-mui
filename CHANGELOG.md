@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v0.5.3 (2026-07-31)
+
+### Bug Fixes
+
+- Read theme variables from the component host element
+  ([`c2b66fa`](https://github.com/lperezmo/st-mui/commit/c2b66fa898ba17bff4eeb7a39600bd500dee12a6))
+
+Streamlit declares its --st-* custom properties on a generated class on each element container, not
+  on :root. The theme bridge read them from document.documentElement, where they resolve to empty
+  strings, so every lookup silently took its fallback: components rendered with Streamlit's stock
+  red primary and light-mode defaults no matter what the app configured.
+
+Read the properties from the element the component renders into, which inherits them, following the
+  documented pattern of preferring the shadow host when style isolation is active.
+
+Also key the theme cache on every value the theme is built from. Keying on primary, background, and
+  mode alone returned a stale theme when only the text, gray, font, or radius token changed.
+
+
 ## v0.5.2 (2026-07-31)
 
 ### Bug Fixes
