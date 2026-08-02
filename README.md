@@ -20,6 +20,8 @@
 ---
 
 <div align="center">
+  <img src="https://raw.githubusercontent.com/lperezmo/st-mui/master/assets/logo.svg" alt="st-mui logo" width="380">
+
   <h1>st-mui</h1>
   <p>Material UI and MUI X components for Streamlit, built with <a href="https://docs.streamlit.io/develop/api-reference/custom-components/st.components.v2.component">Components v2</a></p>
 
