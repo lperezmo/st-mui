@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import date
 
 from st_mui._compat import component
-from st_mui._picker import normalize_bool, normalize_optional_text, normalize_views
+from st_mui._picker import (
+    normalize_bool,
+    normalize_date_value,
+    normalize_optional_text,
+    normalize_views,
+)
 
 _component = component(
     "st-mui.date_picker",
@@ -97,25 +102,22 @@ def date_picker(
         open_to=open_to,
     )
 
-    def _serialize_date(d):
-        if d is None:
-            return None
-        if isinstance(d, date):
-            return d.isoformat()
-        return str(d)
-
     def _noop():
         pass
 
-    serialized_value = _serialize_date(value)
+    serialized_value, parsed_value = normalize_date_value(value, field="value")
+    min_value, parsed_min = normalize_date_value(min_date, field="min_date")
+    max_value, parsed_max = normalize_date_value(max_date, field="max_date")
+    if parsed_min is not None and parsed_max is not None and parsed_min > parsed_max:
+        raise ValueError("min_date must not exceed max_date")
     result = _component(
         key=key,
         default={"selected_date": serialized_value},
         data={
             "label": label,
-            "value": _serialize_date(value),
-            "minDate": _serialize_date(min_date),
-            "maxDate": _serialize_date(max_date),
+            "value": serialized_value,
+            "minDate": min_value,
+            "maxDate": max_value,
             "format": format,
             "disabled": disabled,
             "helperText": helper_text,
@@ -130,12 +132,17 @@ def date_picker(
         on_selected_date_change=on_change or _noop,
     )
 
-    selected = result.get("selected_date") if result else None
-    if selected is None and not clearable and serialized_value is not None:
-        selected = serialized_value
-    if selected:
-        try:
-            return date.fromisoformat(selected)
-        except (ValueError, TypeError):
-            return None
-    return None
+    if not isinstance(result, Mapping) or "selected_date" not in result:
+        return parsed_value
+    selected = result.get("selected_date")
+    if selected is None:
+        return None if clearable else parsed_value
+    try:
+        _, parsed_selected = normalize_date_value(selected, field="selected_date")
+    except (TypeError, ValueError):
+        return parsed_value
+    if parsed_min is not None and parsed_selected < parsed_min:
+        return parsed_value
+    if parsed_max is not None and parsed_selected > parsed_max:
+        return parsed_value
+    return parsed_selected

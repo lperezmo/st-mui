@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 
 from st_mui._compat import component
-from st_mui._datetime import parse_datetime, serialize_datetime
+from st_mui._datetime import normalize_datetime_value
 from st_mui._picker import (
+    is_minute_aligned,
     normalize_bool,
     normalize_minutes_step,
     normalize_optional_text,
@@ -113,15 +114,19 @@ def date_time_picker(
     def _noop():
         pass
 
-    serialized_value = serialize_datetime(value)
+    serialized_value, parsed_value = normalize_datetime_value(value, field="value")
+    min_value, parsed_min = normalize_datetime_value(min_datetime, field="min_datetime")
+    max_value, parsed_max = normalize_datetime_value(max_datetime, field="max_datetime")
+    if parsed_min is not None and parsed_max is not None and parsed_min > parsed_max:
+        raise ValueError("min_datetime must not exceed max_datetime")
     result = _component(
         key=key,
         default={"selected_datetime": serialized_value},
         data={
             "label": label,
-            "value": serialize_datetime(value),
-            "minDatetime": serialize_datetime(min_datetime),
-            "maxDatetime": serialize_datetime(max_datetime),
+            "value": serialized_value,
+            "minDatetime": min_value,
+            "maxDatetime": max_value,
             "ampm": ampm,
             "disabled": disabled,
             "helperText": helper_text,
@@ -137,7 +142,21 @@ def date_time_picker(
         on_selected_datetime_change=on_change or _noop,
     )
 
-    selected = result.get("selected_datetime") if result else None
-    if selected is None and not clearable and serialized_value is not None:
-        selected = serialized_value
-    return parse_datetime(selected)
+    if not isinstance(result, Mapping) or "selected_datetime" not in result:
+        return parsed_value
+    selected = result.get("selected_datetime")
+    if selected is None:
+        return None if clearable else parsed_value
+    try:
+        _, parsed_selected = normalize_datetime_value(
+            selected, field="selected_datetime", reject_timezone=True
+        )
+    except (TypeError, ValueError):
+        return parsed_value
+    if parsed_min is not None and parsed_selected < parsed_min:
+        return parsed_value
+    if parsed_max is not None and parsed_selected > parsed_max:
+        return parsed_value
+    if not is_minute_aligned(parsed_selected, minutes_step):
+        return parsed_value
+    return parsed_selected

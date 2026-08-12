@@ -8,8 +8,9 @@ from datetime import datetime
 from typing import Any
 
 from st_mui._compat import component
-from st_mui._datetime import parse_datetime, serialize_datetime
+from st_mui._datetime import normalize_datetime_value
 from st_mui._picker import (
+    is_minute_aligned,
     normalize_bool,
     normalize_minutes_step,
     normalize_optional_text,
@@ -29,15 +30,7 @@ _DEFAULT_DATETIME_VIEWS = ("year", "day", "hours", "minutes")
 def _normalize_datetime(
     value: Any, *, field: str
 ) -> tuple[str | None, datetime | None]:
-    if value is None:
-        return None, None
-    if not isinstance(value, (datetime, str)):
-        raise TypeError(f"{field} must be a datetime, ISO datetime string, or None")
-    parsed = value if isinstance(value, datetime) else parse_datetime(value)
-    if parsed is None:
-        raise ValueError(f"{field} must be a valid ISO datetime string")
-    parsed = parsed.replace(tzinfo=None)
-    return serialize_datetime(parsed), parsed
+    return normalize_datetime_value(value, field=field)
 
 
 def _normalize_range(
@@ -62,6 +55,7 @@ def _returned_range(
     fallback: tuple[datetime | None, datetime | None],
     min_datetime: datetime | None,
     max_datetime: datetime | None,
+    minutes_step: int,
 ) -> tuple[datetime | None, datetime | None]:
     if not isinstance(result, Mapping):
         return fallback
@@ -82,6 +76,11 @@ def _returned_range(
         return fallback
     if max_datetime is not None and any(
         item is not None and item > max_datetime for item in (start, end)
+    ):
+        return fallback
+    if any(
+        item is not None and not is_minute_aligned(item, minutes_step)
+        for item in (start, end)
     ):
         return fallback
     return start, end
@@ -204,4 +203,5 @@ def date_time_range_picker(
         fallback=default_range,
         min_datetime=parsed_min,
         max_datetime=parsed_max,
+        minutes_step=minutes_step,
     )

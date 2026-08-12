@@ -17,6 +17,7 @@ _component = component(
 Number = int | float
 _MAX_SAFE_INTEGER = (1 << 53) - 1
 _MAX_IMPLICIT_MARKS = 1_000
+_STEP_ALIGNMENT_TOLERANCE = 1e-9
 
 
 def _number(value: Any, *, field: str) -> Number:
@@ -67,13 +68,27 @@ def _valid_selected_number(
     *,
     min_value: Number,
     max_value: Number,
+    step: Number | None,
     allowed_values: set[Number] | None,
 ) -> bool:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return False
     if not math.isfinite(value) or not min_value <= value <= max_value:
         return False
-    return allowed_values is None or value in allowed_values
+    if allowed_values is not None:
+        return value in allowed_values
+    if step is None:
+        return False
+    try:
+        intervals = (value - min_value) / step
+    except OverflowError:
+        return False
+    return math.isfinite(intervals) and math.isclose(
+        intervals,
+        round(intervals),
+        rel_tol=0,
+        abs_tol=_STEP_ALIGNMENT_TOLERANCE,
+    )
 
 
 def slider(
@@ -190,12 +205,14 @@ def slider(
                 selected[0],
                 min_value=min_value,
                 max_value=max_value,
+                step=step,
                 allowed_values=allowed_values,
             )
             and _valid_selected_number(
                 selected[1],
                 min_value=min_value,
                 max_value=max_value,
+                step=step,
                 allowed_values=allowed_values,
             )
             and selected[0] <= selected[1]
@@ -208,6 +225,7 @@ def slider(
             selected,
             min_value=min_value,
             max_value=max_value,
+            step=step,
             allowed_values=allowed_values,
         )
         else normalized_value

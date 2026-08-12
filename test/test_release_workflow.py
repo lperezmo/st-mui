@@ -51,6 +51,20 @@ def test_release_and_ci_verify_the_tagged_lock() -> None:
     assert "python scripts/assert_lock_security.py" in manual_publish_workflow
 
 
+def test_release_workflows_pin_actions_to_full_commit_shas() -> None:
+    for workflow_name in ("release.yml", "publish.yml"):
+        workflow = (ROOT / ".github/workflows" / workflow_name).read_text(
+            encoding="utf-8"
+        )
+        action_refs = re.findall(r"(?m)^\s*- uses:\s+([^\s#]+)", workflow)
+
+        assert action_refs
+        assert all(
+            re.fullmatch(r"[^@]+@[0-9a-f]{40}", action_ref)
+            for action_ref in action_refs
+        ), f"{workflow_name} contains mutable action references: {action_refs}"
+
+
 @pytest.mark.skipif(not HAS_TOMLLIB, reason="lock guard runs in Python 3.13 CI jobs")
 def test_lock_guard_rejects_project_version_drift(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch

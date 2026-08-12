@@ -304,6 +304,63 @@ def test_slider_rejects_malformed_range_values_from_frontend(load_component, res
 
 
 @pytest.mark.parametrize(
+    ("response", "value", "expected"),
+    [
+        ({"selected_value": 4.25}, 4.0, 4.0),
+        ({"selected_value": [2.0, 7.25]}, (2.0, 8.0), (2.0, 8.0)),
+    ],
+)
+def test_slider_rejects_frontend_values_off_numeric_step(
+    load_component, response, value, expected
+):
+    module = load_component("slider", lambda **_kwargs: response)
+
+    assert module.slider(value=value, min_value=0, max_value=10, step=0.5) == expected
+
+
+def test_tree_view_validates_returned_ids_against_nested_items(load_component):
+    items = [
+        {
+            "id": "docs",
+            "label": "Documents",
+            "children": [{"id": "resume", "label": "Resume"}],
+        }
+    ]
+    responses = iter(
+        [
+            {"selected_items": ["resume"]},
+            {"selected_items": ["admin"]},
+            {"selected_items": ["docs", "resume"]},
+            {"selected_items": "resume"},
+        ]
+    )
+    module = load_component("tree_view", lambda **_kwargs: next(responses))
+
+    assert module.tree_view(items, multi_select=True) == ["resume"]
+    assert module.tree_view(items, default_selected=["docs"], multi_select=True) == [
+        "docs"
+    ]
+    assert module.tree_view(items, default_selected=["docs"]) == ["docs"]
+    assert module.tree_view(items, default_selected=["resume"]) == ["resume"]
+
+
+@pytest.mark.parametrize(
+    "items",
+    [
+        [{"id": "missing-label"}],
+        [{"id": "duplicate", "label": "A"}, {"id": "duplicate", "label": "B"}],
+        [{"id": 1, "label": "Numeric"}],
+        [{"id": "parent", "label": "Parent", "children": "not-a-list"}],
+    ],
+)
+def test_tree_view_rejects_malformed_item_models(load_component, items):
+    module = load_component("tree_view", lambda **kwargs: kwargs["default"])
+
+    with pytest.raises((TypeError, ValueError)):
+        module.tree_view(items)
+
+
+@pytest.mark.parametrize(
     "kwargs",
     [
         {"min_value": 1, "max_value": 1},
@@ -528,6 +585,23 @@ def test_data_grid_infers_a_stable_union_of_row_fields(load_component):
         "score",
     ]
     assert calls[0]["data"]["columns"][2]["type"] == "number"
+
+
+def test_data_grid_column_inference_scans_sparse_rows_once(load_component):
+    class CountingRow(dict):
+        get_calls = 0
+
+        def get(self, key, default=None):
+            type(self).get_calls += 1
+            return super().get(key, default)
+
+    module = load_component("data_grid", lambda **kwargs: kwargs["default"])
+    rows = [CountingRow({f"field_{index}": index}) for index in range(50)]
+
+    columns = module._normalize_columns(None, rows=rows)
+
+    assert len(columns) == 50
+    assert CountingRow.get_calls <= len(rows)
 
 
 def test_data_grid_normalizes_columns_dataframe_and_composite_callback(load_component):

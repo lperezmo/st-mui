@@ -30,3 +30,23 @@ def serialize_datetime(value: datetime | str | None) -> str | None:
         return parsed.replace(tzinfo=None).isoformat()
 
     return str(value)
+
+
+def normalize_datetime_value(
+    value: Any,
+    *,
+    field: str,
+    reject_timezone: bool = False,
+) -> tuple[str | None, datetime | None]:
+    """Normalize a wall-clock datetime prop or untrusted component result."""
+    if value is None:
+        return None, None
+    if not isinstance(value, (datetime, str)):
+        raise TypeError(f"{field} must be a datetime, ISO datetime string, or None")
+    parsed = value if isinstance(value, datetime) else parse_datetime(value)
+    if parsed is None:
+        raise ValueError(f"{field} must be a valid ISO datetime string")
+    if reject_timezone and parsed.tzinfo is not None:
+        raise ValueError(f"{field} must be timezone-naive")
+    parsed = parsed.replace(tzinfo=None)
+    return parsed.isoformat(), parsed

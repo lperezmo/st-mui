@@ -3,7 +3,57 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date, datetime, time
 from typing import Any
+
+
+def normalize_date_value(value: Any, *, field: str) -> tuple[str | None, date | None]:
+    """Normalize a date prop without accepting datetime subclasses."""
+    if value is None:
+        return None, None
+    if isinstance(value, datetime):
+        raise TypeError(f"{field} must be a date, ISO date string, or None")
+    if isinstance(value, date):
+        parsed = value
+    elif isinstance(value, str):
+        try:
+            parsed = date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"{field} must be an ISO date string (YYYY-MM-DD)"
+            ) from exc
+    else:
+        raise TypeError(f"{field} must be a date, ISO date string, or None")
+    return parsed.isoformat(), parsed
+
+
+def normalize_time_value(
+    value: Any,
+    *,
+    field: str,
+    reject_timezone: bool = False,
+) -> tuple[str | None, time | None]:
+    """Normalize a wall-clock time prop or untrusted component result."""
+    if value is None:
+        return None, None
+    if isinstance(value, time):
+        parsed = value
+    elif isinstance(value, str):
+        try:
+            parsed = time.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(f"{field} must be a valid ISO time string") from exc
+    else:
+        raise TypeError(f"{field} must be a time, ISO time string, or None")
+    if reject_timezone and parsed.tzinfo is not None:
+        raise ValueError(f"{field} must be timezone-naive")
+    parsed = parsed.replace(tzinfo=None)
+    return parsed.isoformat(), parsed
+
+
+def is_minute_aligned(value: time | datetime, minutes_step: int) -> bool:
+    """Return whether a time-like value lies on the configured minute grid."""
+    return value.minute % minutes_step == 0
 
 
 def normalize_optional_text(value: Any, *, field: str) -> str | None:
