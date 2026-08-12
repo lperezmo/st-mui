@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.5.4 (2026-08-12)
+
+### Bug Fixes
+
+- **security**: Validate component state and pin release actions
+  ([`62ce411`](https://github.com/lperezmo/st-mui/commit/62ce4112350eba49d552c251b22cc601be55c43a))
+
+
 ## v0.5.3 (2026-07-31)
 
 ### Bug Fixes
