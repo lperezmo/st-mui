@@ -142,8 +142,7 @@ def _normalize_rows(
     return normalized
 
 
-def _infer_column_type(rows: list[dict[str, Any]], field: str) -> str:
-    value = next((row.get(field) for row in rows if row.get(field) is not None), None)
+def _infer_column_type(value: Any) -> str:
     if isinstance(value, bool):
         return "boolean"
     if isinstance(value, (int, float)):
@@ -156,19 +155,22 @@ def _normalize_columns(
     *,
     rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
+    fields: list[str] = []
+    inferred_types: dict[str, str | None] = {}
+    for row in rows:
+        for field, value in row.items():
+            if field not in inferred_types:
+                fields.append(field)
+                inferred_types[field] = None
+            if inferred_types[field] is None and value is not None:
+                inferred_types[field] = _infer_column_type(value)
+
     if columns is None:
-        fields: list[str] = []
-        seen_fields: set[str] = set()
-        for row in rows:
-            for field in row:
-                if field not in seen_fields:
-                    seen_fields.add(field)
-                    fields.append(field)
         return [
             {
                 "field": field,
                 "headerName": field.replace("_", " ").title(),
-                "type": _infer_column_type(rows, field),
+                "type": inferred_types[field] or "string",
                 "flex": 1,
             }
             for field in fields
@@ -206,7 +208,7 @@ def _normalize_columns(
             raise ValueError(f"columns contains duplicate field {field!r}")
         seen_fields.add(field)
 
-        column_type = raw.get("type", _infer_column_type(rows, field))
+        column_type = raw.get("type", inferred_types.get(field) or "string")
         if not isinstance(column_type, str) or column_type not in _COLUMN_TYPES:
             raise ValueError(
                 f"columns[{index}].type must be one of {sorted(_COLUMN_TYPES)}"

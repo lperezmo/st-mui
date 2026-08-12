@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import time
 
 from st_mui._compat import component
 from st_mui._picker import (
+    is_minute_aligned,
     normalize_bool,
     normalize_minutes_step,
     normalize_optional_text,
+    normalize_time_value,
     normalize_views,
 )
 
@@ -107,26 +109,21 @@ def time_picker(
     )
     minutes_step = normalize_minutes_step(minutes_step)
 
-    def _serialize_time(t):
-        if t is None:
-            return None
-        if isinstance(t, time):
-            return t.isoformat()
-        return str(t)
-
     def _noop():
         pass
 
-    serialized_value = _serialize_time(value)
+    serialized_value, parsed_value = normalize_time_value(value, field="value")
+    min_value, parsed_min = normalize_time_value(min_time, field="min_time")
+    max_value, parsed_max = normalize_time_value(max_time, field="max_time")
     result = _component(
         key=key,
         default={"selected_time": serialized_value},
         data={
             "label": label,
-            "value": _serialize_time(value),
+            "value": serialized_value,
             "ampm": ampm,
-            "minTime": _serialize_time(min_time),
-            "maxTime": _serialize_time(max_time),
+            "minTime": min_value,
+            "maxTime": max_value,
             "disabled": disabled,
             "helperText": helper_text,
             "clearable": clearable,
@@ -141,12 +138,21 @@ def time_picker(
         on_selected_time_change=on_change or _noop,
     )
 
-    selected = result.get("selected_time") if result else None
-    if selected is None and not clearable and serialized_value is not None:
-        selected = serialized_value
-    if selected:
-        try:
-            return time.fromisoformat(selected)
-        except (ValueError, TypeError):
-            return None
-    return None
+    if not isinstance(result, Mapping) or "selected_time" not in result:
+        return parsed_value
+    selected = result.get("selected_time")
+    if selected is None:
+        return None if clearable else parsed_value
+    try:
+        _, parsed_selected = normalize_time_value(
+            selected, field="selected_time", reject_timezone=True
+        )
+    except (TypeError, ValueError):
+        return parsed_value
+    if parsed_min is not None and parsed_selected < parsed_min:
+        return parsed_value
+    if parsed_max is not None and parsed_selected > parsed_max:
+        return parsed_value
+    if not is_minute_aligned(parsed_selected, minutes_step):
+        return parsed_value
+    return parsed_selected

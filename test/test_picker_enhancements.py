@@ -247,6 +247,79 @@ def test_non_clearable_picker_rejects_cleared_frontend_state(
 
 
 @pytest.mark.parametrize(
+    ("module_name", "function_name", "state_name", "response", "kwargs", "expected"),
+    [
+        (
+            "date_picker",
+            "date_picker",
+            "selected_date",
+            "2026-08-05",
+            {
+                "value": "2026-08-02",
+                "min_date": "2026-08-01",
+                "max_date": "2026-08-03",
+            },
+            date(2026, 8, 2),
+        ),
+        (
+            "time_picker",
+            "time_picker",
+            "selected_time",
+            "09:10:00",
+            {
+                "value": "09:15:00",
+                "min_time": "09:00:00",
+                "max_time": "10:00:00",
+                "minutes_step": 15,
+            },
+            time(9, 15),
+        ),
+        (
+            "time_picker",
+            "time_picker",
+            "selected_time",
+            "09:30:00+04:00",
+            {"value": "09:15:00"},
+            time(9, 15),
+        ),
+        (
+            "date_time_picker",
+            "date_time_picker",
+            "selected_datetime",
+            "2026-08-01T12:00:00",
+            {
+                "value": "2026-08-01T09:15:00",
+                "min_datetime": "2026-08-01T08:00:00",
+                "max_datetime": "2026-08-01T11:00:00",
+                "minutes_step": 15,
+            },
+            datetime(2026, 8, 1, 9, 15),
+        ),
+        (
+            "date_time_picker",
+            "date_time_picker",
+            "selected_datetime",
+            "2026-08-01T09:30:00Z",
+            {"value": "2026-08-01T09:15:00"},
+            datetime(2026, 8, 1, 9, 15),
+        ),
+    ],
+)
+def test_picker_rejects_frontend_state_outside_server_domain(
+    load_picker,
+    module_name,
+    function_name,
+    state_name,
+    response,
+    kwargs,
+    expected,
+):
+    module = load_picker(module_name, lambda **_kwargs: {state_name: response})
+
+    assert getattr(module, function_name)(**kwargs) == expected
+
+
+@pytest.mark.parametrize(
     ("module_name", "function_name", "kwargs", "error", "message"),
     [
         (

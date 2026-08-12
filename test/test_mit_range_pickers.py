@@ -314,6 +314,24 @@ def test_cleared_frontend_range_returns_none_pair(
     assert getattr(module, function_name)(clearable=True) == (None, None)
 
 
+def test_datetime_range_rejects_off_step_frontend_state(load_component):
+    module = load_component(
+        "date_time_range_picker",
+        lambda **_options: {
+            "start_datetime": "2026-08-02T09:10:00",
+            "end_datetime": "2026-08-02T10:00:00",
+        },
+    )
+
+    assert module.date_time_range_picker(
+        value=("2026-08-02T09:15:00", "2026-08-02T10:00:00"),
+        minutes_step=15,
+    ) == (
+        datetime(2026, 8, 2, 9, 15),
+        datetime(2026, 8, 2, 10),
+    )
+
+
 @pytest.mark.parametrize(
     ("module_name", "function_name", "start_callback", "end_callback"),
     [
