@@ -51,8 +51,8 @@ def test_release_and_ci_verify_the_tagged_lock() -> None:
     assert "python scripts/assert_lock_security.py" in manual_publish_workflow
 
 
-def test_release_workflows_pin_actions_to_full_commit_shas() -> None:
-    for workflow_name in ("release.yml", "publish.yml"):
+def test_workflows_pin_actions_to_full_commit_shas() -> None:
+    for workflow_name in ("release.yml", "publish.yml", "tests.yml"):
         workflow = (ROOT / ".github/workflows" / workflow_name).read_text(
             encoding="utf-8"
         )
