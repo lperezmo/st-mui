@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.5.5 (2026-08-24)
+
+### Bug Fixes
+
+- **security**: Pin CI actions to immutable commits
+  ([`b766949`](https://github.com/lperezmo/st-mui/commit/b766949351e12b0f7b4ac7eb841574f91deb7710))
+
+### Testing
+
+- **security**: Guard every workflow action ref
+  ([`1dda23e`](https://github.com/lperezmo/st-mui/commit/1dda23e723c3983a8776200d635329f5013f5b80))
+
+
 ## v0.5.4 (2026-08-12)
 
 ### Bug Fixes
