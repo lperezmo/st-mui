@@ -1,43 +1,32 @@
 name: Build & Publish to PyPI (Manual)
 
-# Fallback for manually retrying a tag-based release.
+# Fallback for manually retrying a tag-based release. Select the existing v*
+# tag in the workflow's "Run workflow" ref selector, not the default branch.
+# Tag-scoped runs cannot write to the default branch's Actions cache namespace.
 # Automated releases are handled by release.yml via python-semantic-release.
 on:
   workflow_dispatch:
-    inputs:
-      ref:
-        description: Existing v* tag to build and publish
-        required: true
-        type: string
 
 permissions:
   contents: read
 
 jobs:
   build:
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
     runs-on: ubuntu-latest
     env:
-      RELEASE_REF: ${{ inputs.ref }}
+      RELEASE_REF: ${{ github.ref }}
     steps:
-      - name: Validate release tag
-        run: |
-          case "$RELEASE_REF" in
-            v*) ;;
-            *) echo "ref must be an existing v* tag" >&2; exit 1 ;;
-          esac
-
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          ref: ${{ inputs.ref }}
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Confirm ref is an existing tag
+      - name: Confirm release tag is on master
         run: |
-          git show-ref --verify --quiet "refs/tags/$RELEASE_REF" || {
-            echo "$RELEASE_REF is not an existing tag" >&2
-            exit 1
-          }
+          git show-ref --verify --quiet "$RELEASE_REF"
           test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "$RELEASE_REF")"
+          git merge-base --is-ancestor HEAD refs/remotes/origin/master
 
       # Build all frontend components
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
@@ -92,4 +81,3 @@ jobs:
           packages-dir: dist/
           verbose: true
           attestations: false
-
