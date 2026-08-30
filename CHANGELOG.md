@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.5.6 (2026-08-30)
+
+### Bug Fixes
+
+- **ci**: Disable shared dependency caches throughout workflows
+  ([`c7a7351`](https://github.com/lperezmo/st-mui/commit/c7a73516655d38bd30e36259c20235b45d0bb79c))
+
+- **security**: Isolate publishing from caches and patch dependencies
+  ([`b9dca44`](https://github.com/lperezmo/st-mui/commit/b9dca44d122cd0f91f33341d0b23690bd5ff94a7))
+
+
 ## v0.5.5 (2026-08-24)
 
 ### Bug Fixes
