@@ -8,9 +8,9 @@ from pathlib import Path
 import tomllib
 
 MINIMUM_VERSIONS = {
-    # Fixes Dependabot alerts #35-#44 (excluding unused #39). The newest
-    # advisory in that set requires GitPython 3.1.55 or newer.
-    "gitpython": (3, 1, 55),
+    # Includes GitPython advisories fixed in 3.1.58.
+    "gitpython": (3, 1, 58),
+    "click": (8, 3, 3),
 }
 PROJECT_FILES = (Path("pyproject.toml"), Path("st_mui/pyproject.toml"))
 

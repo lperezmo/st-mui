@@ -41,7 +41,10 @@ jobs:
 
       # Build frontend
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with: { node-version: '22' }
+        with:
+          node-version: '22'
+          # Publishing must not restore caches writable by other workflows.
+          package-manager-cache: false
       - run: npm ci && npm run build
         working-directory: st_mui/frontend
 
@@ -54,7 +57,7 @@ jobs:
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
         with:
           version: '0.11.32'
-          enable-cache: true
+          enable-cache: false
       - name: Verify release lock and dependency security floor
         run: |
           uv lock --check
@@ -78,3 +81,4 @@ jobs:
           packages-dir: dist/
           verbose: true
           attestations: false
+
