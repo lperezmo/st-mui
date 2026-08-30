@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.5.7 (2026-08-30)
+
+### Bug Fixes
+
+- **security**: Scope manual releases to trusted version tags
+  ([`ed2f83f`](https://github.com/lperezmo/st-mui/commit/ed2f83f52e55194b9d9806366b267d7332f223b0))
+
+
 ## v0.5.6 (2026-08-30)
 
 ### Bug Fixes
