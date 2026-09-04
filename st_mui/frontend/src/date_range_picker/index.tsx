@@ -5,5 +5,6 @@ import DateRangePickerComponent, {
 } from "./DateRangePicker";
 
 export default createMuiRenderer<DateRangePickerState, DateRangePickerData>(
-  DateRangePickerComponent
+  DateRangePickerComponent,
+  { emotionKey: "st-mui-date-range-picker" },
 );

@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker as MuiDatePicker } from "@mui/x-date-pickers/DatePicker";
-import { createPickerId } from "../shared/id";
+import { usePickerId } from "../shared/id";
 import type {
   DateValidationError,
   DateView,
@@ -117,7 +117,7 @@ const DatePickerComponent: FC<Props> = ({ data, setStateValue }) => {
     serializeDatePickerValue(parseDatePickerValue(value)),
   );
   const previousExternalValueRef = useRef(value);
-  const inputId = useMemo(() => createPickerId("date-picker"), []);
+  const inputId = usePickerId("date-picker");
 
   useEffect(() => {
     if (previousExternalValueRef.current !== value) {
@@ -152,11 +152,11 @@ const DatePickerComponent: FC<Props> = ({ data, setStateValue }) => {
   );
 
   const minDateDayjs = useMemo(
-    () => (minDate ? dayjs(minDate) : undefined),
+    () => parseDatePickerValue(minDate) ?? undefined,
     [minDate],
   );
   const maxDateDayjs = useMemo(
-    () => (maxDate ? dayjs(maxDate) : undefined),
+    () => parseDatePickerValue(maxDate) ?? undefined,
     [maxDate],
   );
 

@@ -11,7 +11,7 @@ import type {
   DateView,
   PickerChangeHandlerContext,
 } from "@mui/x-date-pickers/models";
-import { createPickerId } from "../shared/id";
+import { usePickerId } from "../shared/id";
 
 export type DateRangePickerState = {
   start_date: string | null;
@@ -113,7 +113,9 @@ export function updateDateRangeState(
 }
 
 function parseDate(value: string | null): Dayjs | null {
-  return value ? dayjs(value) : null;
+  if (!value) return null;
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed : null;
 }
 
 export function syncExternalDateRangeValue(
@@ -204,7 +206,7 @@ const DateRangePickerComponent: FC<Props> = ({
     start_date: startValue,
     end_date: endValue,
   });
-  const fieldIdBase = useMemo(() => createPickerId("date-range-picker"), []);
+  const fieldIdBase = usePickerId("date-range-picker");
   const helperTextId = `${fieldIdBase}-helper`;
 
   useEffect(() => {
@@ -253,38 +255,53 @@ const DateRangePickerComponent: FC<Props> = ({
   );
 
   const minDayjs = useMemo(
-    () => (minDate ? dayjs(minDate) : undefined),
+    () => parseDate(minDate) ?? undefined,
     [minDate],
   );
   const maxDayjs = useMemo(
-    () => (maxDate ? dayjs(maxDate) : undefined),
+    () => parseDate(maxDate) ?? undefined,
     [maxDate],
   );
   const { startMax, endMin } = getDateRangeBounds(minDayjs, maxDayjs, selected);
 
-  const commonProps = {
-    format,
-    disabled,
-    readOnly,
-    disablePast,
-    disableFuture,
-    openTo: openTo ?? undefined,
-    views: views ?? undefined,
-    displayWeekNumber,
-    slotProps: {
-      field: { clearable },
-      textField: {
-        fullWidth: true,
-        InputProps: {
-          "aria-describedby": helperText ? helperTextId : undefined,
+  const commonProps = useMemo(
+    () => ({
+      format,
+      disabled,
+      readOnly,
+      disablePast,
+      disableFuture,
+      openTo: openTo ?? undefined,
+      views: views ?? undefined,
+      displayWeekNumber,
+      slotProps: {
+        field: { clearable },
+        textField: {
+          fullWidth: true,
+          InputProps: {
+            "aria-describedby": helperText ? helperTextId : undefined,
+          },
+        },
+        popper: {
+          disablePortal: false,
+          style: { zIndex: 999999 },
         },
       },
-      popper: {
-        disablePortal: false,
-        style: { zIndex: 999999 },
-      },
-    },
-  };
+    }),
+    [
+      format,
+      disabled,
+      readOnly,
+      disablePast,
+      disableFuture,
+      openTo,
+      views,
+      displayWeekNumber,
+      clearable,
+      helperText,
+      helperTextId,
+    ],
+  );
 
   return (
     <Box sx={{ width: "100%", py: 0.5 }}>

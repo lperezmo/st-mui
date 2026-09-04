@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker as MuiTimePicker } from "@mui/x-date-pickers/TimePicker";
-import { createPickerId } from "../shared/id";
+import { usePickerId } from "../shared/id";
 import { resolveTimeSteps } from "../shared/timeSteps";
 import type {
   PickerChangeHandlerContext,
@@ -123,7 +123,7 @@ const TimePickerComponent: FC<Props> = ({ data, setStateValue }) => {
     serializeTimePickerValue(parseTimePickerValue(value)),
   );
   const previousExternalValueRef = useRef(value);
-  const inputId = useMemo(() => createPickerId("time-picker"), []);
+  const inputId = usePickerId("time-picker");
 
   useEffect(() => {
     if (previousExternalValueRef.current !== value) {

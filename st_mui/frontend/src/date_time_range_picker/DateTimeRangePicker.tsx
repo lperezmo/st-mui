@@ -12,7 +12,7 @@ import type {
   PickerChangeHandlerContext,
 } from "@mui/x-date-pickers/models";
 import { serializeWallClockDateTime } from "../shared/datetime";
-import { createPickerId } from "../shared/id";
+import { usePickerId } from "../shared/id";
 import { resolveTimeSteps } from "../shared/timeSteps";
 
 export type DateTimeRangePickerState = {
@@ -112,7 +112,9 @@ export function updateDateTimeRangeState(
 }
 
 function parseDateTime(value: string | null): Dayjs | null {
-  return value ? dayjs(value) : null;
+  if (!value) return null;
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed : null;
 }
 
 export function syncExternalDateTimeRangeValue(
@@ -207,10 +209,7 @@ const DateTimeRangePickerComponent: FC<Props> = ({
     start_datetime: startValue,
     end_datetime: endValue,
   });
-  const fieldIdBase = useMemo(
-    () => createPickerId("date-time-range-picker"),
-    [],
-  );
+  const fieldIdBase = usePickerId("date-time-range-picker");
   const helperTextId = `${fieldIdBase}-helper`;
 
   useEffect(() => {
@@ -261,11 +260,11 @@ const DateTimeRangePickerComponent: FC<Props> = ({
   );
 
   const minDayjs = useMemo(
-    () => (minDatetime ? dayjs(minDatetime) : undefined),
+    () => parseDateTime(minDatetime) ?? undefined,
     [minDatetime],
   );
   const maxDayjs = useMemo(
-    () => (maxDatetime ? dayjs(maxDatetime) : undefined),
+    () => parseDateTime(maxDatetime) ?? undefined,
     [maxDatetime],
   );
   const { startMax, endMin } = getDateTimeRangeBounds(
@@ -274,31 +273,47 @@ const DateTimeRangePickerComponent: FC<Props> = ({
     selected,
   );
 
-  const commonProps = {
-    ampm,
-    format: format ?? undefined,
-    disabled,
-    readOnly,
-    disablePast,
-    disableFuture,
-    openTo: openTo ?? undefined,
-    views: views ?? undefined,
-    minutesStep,
-    timeSteps: resolveTimeSteps(minutesStep),
-    slotProps: {
-      field: { clearable },
-      textField: {
-        fullWidth: true,
-        InputProps: {
-          "aria-describedby": helperText ? helperTextId : undefined,
+  const commonProps = useMemo(
+    () => ({
+      ampm,
+      format: format ?? undefined,
+      disabled,
+      readOnly,
+      disablePast,
+      disableFuture,
+      openTo: openTo ?? undefined,
+      views: views ?? undefined,
+      minutesStep,
+      timeSteps: resolveTimeSteps(minutesStep),
+      slotProps: {
+        field: { clearable },
+        textField: {
+          fullWidth: true,
+          InputProps: {
+            "aria-describedby": helperText ? helperTextId : undefined,
+          },
+        },
+        popper: {
+          disablePortal: false,
+          style: { zIndex: 999999 },
         },
       },
-      popper: {
-        disablePortal: false,
-        style: { zIndex: 999999 },
-      },
-    },
-  };
+    }),
+    [
+      ampm,
+      format,
+      disabled,
+      readOnly,
+      disablePast,
+      disableFuture,
+      openTo,
+      views,
+      minutesStep,
+      clearable,
+      helperText,
+      helperTextId,
+    ],
+  );
 
   return (
     <Box sx={{ width: "100%", py: 0.5 }}>

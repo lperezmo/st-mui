@@ -7,4 +7,4 @@ import DateTimeRangePickerComponent, {
 export default createMuiRenderer<
   DateTimeRangePickerState,
   DateTimeRangePickerData
->(DateTimeRangePickerComponent);
+>(DateTimeRangePickerComponent, { emotionKey: "st-mui-date-time-range" });

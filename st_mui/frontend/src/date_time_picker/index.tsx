@@ -5,5 +5,6 @@ import DateTimePickerComponent, {
 } from "./DateTimePicker";
 
 export default createMuiRenderer<DateTimePickerState, DateTimePickerData>(
-  DateTimePickerComponent
+  DateTimePickerComponent,
+  { emotionKey: "st-mui-date-time-picker" },
 );
