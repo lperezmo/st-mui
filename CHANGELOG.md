@@ -1,6 +1,32 @@
 # CHANGELOG
 
 
+## v0.5.8 (2026-09-04)
+
+### Bug Fixes
+
+- **frontend**: Harden theme, renderer, tree, grid, pickers and controls
+  ([`fb596b5`](https://github.com/lperezmo/st-mui/commit/fb596b593970db94f80ddaee237c16b1ef05cec9))
+
+Theme: robust CSS color parsing (space/slash rgb, hsl, 8-digit hex), validated palette with
+  fallbacks, fractional border radius, MuiPaper follows secondaryBg.
+
+Renderer: per-component Emotion cache keys, correct Shadow DOM host lookup via getRootNode, clearer
+  errors.
+
+TreeView: controlled expanded/selected state with reconciliation, valid-id filtering, empty state,
+  aria-label, disabled guards.
+
+DataGrid: order-insensitive selection compare, Set-based id filtering, single-sort/filter clamping,
+  scrollable disabled mode, empty-columns guard.
+
+Slider/Rating/Autocomplete: clamped slider with bounds watching and a11y labels, ref-guarded rating
+  with empty-label handling, hardened autocomplete equality/labels and render-guard effect.
+
+Pickers: isValid min/max guards, StrictMode-safe usePickerId, memoized range commonProps. Add
+  @emotion/cache dep, fix format script, moduleResolution bundler, 16 new vitest cases.
+
+
 ## v0.5.7 (2026-08-30)
 
 ### Bug Fixes
