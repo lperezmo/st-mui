@@ -5,5 +5,6 @@ import TreeViewComponent, {
 } from "./TreeView";
 
 export default createMuiRenderer<TreeViewState, TreeViewData>(
-  TreeViewComponent
+  TreeViewComponent,
+  { emotionKey: "st-mui-tree-view" },
 );

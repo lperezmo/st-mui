@@ -48,6 +48,36 @@ function autocompleteSelectionValue(
   return typeof item === "string" ? item : item.value;
 }
 
+export function getAutocompleteOptionLabel(
+  option: AutocompleteOption | string | null | undefined,
+): string {
+  if (option === null || option === undefined) return "";
+  if (typeof option === "string") return option;
+  if (typeof option.label === "string") return option.label;
+  return String((option as AutocompleteOption).value ?? "");
+}
+
+export function isAutocompleteOptionDisabled(
+  option: AutocompleteOption | string,
+): boolean {
+  return typeof option === "string" ? false : !!option.disabled;
+}
+
+export function isAutocompleteOptionEqual(
+  option: AutocompleteOption,
+  current: AutocompleteOption | string,
+): boolean {
+  if (typeof current === "string") {
+    // Free-solo strings never equal an option by value identity, but match
+    // when the typed text equals the option label or a string-valued option.
+    return (
+      option.label === current ||
+      (typeof option.value === "string" && option.value === current)
+    );
+  }
+  return sameAutocompleteValue(option.value, current.value);
+}
+
 export function sameAutocompleteValue(
   left: AutocompleteScalar,
   right: AutocompleteScalar,
@@ -197,11 +227,18 @@ const AutocompleteComponent: FC<Props> = ({ data, setStateValue }) => {
       freeSolo,
       previous.multiple !== multiple || previous.freeSolo !== freeSolo,
     );
-    selectedValueRef.current = serializeAutocompleteSelection(
+    const nextSerialized = serializeAutocompleteSelection(
       nextSelection,
       multiple,
     );
     previousDataRef.current = { selectedValue, multiple, freeSolo };
+    // options is a new array identity on every Streamlit rerun; avoid
+    // resetting user state (and extra renders) when the resolved value is
+    // unchanged.
+    if (sameAutocompleteDataValue(selectedValueRef.current, nextSerialized)) {
+      return;
+    }
+    selectedValueRef.current = nextSerialized;
     setSelected(nextSelection);
   }, [selectedValue, options, multiple, freeSolo]);
 
@@ -228,14 +265,9 @@ const AutocompleteComponent: FC<Props> = ({ data, setStateValue }) => {
         freeSolo={freeSolo}
         disableClearable={!clearable}
         disabled={disabled}
-        getOptionLabel={(option) =>
-          typeof option === "string" ? option : option.label
-        }
-        getOptionDisabled={(option) => option.disabled}
-        isOptionEqualToValue={(option, current) =>
-          typeof current !== "string" &&
-          sameAutocompleteValue(option.value, current.value)
-        }
+        getOptionLabel={getAutocompleteOptionLabel}
+        getOptionDisabled={isAutocompleteOptionDisabled}
+        isOptionEqualToValue={isAutocompleteOptionEqual}
         onChange={handleChange}
         renderInput={(params) => (
           <TextField

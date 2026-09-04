@@ -55,6 +55,19 @@ export function sliderValuesEqual(
   );
 }
 
+export function clampSliderValue(
+  value: SliderValue,
+  minValue: number,
+  maxValue: number,
+): SliderValue {
+  const clampOne = (v: number) => Math.min(maxValue, Math.max(minValue, v));
+  return Array.isArray(value) ? value.map(clampOne) : clampOne(value);
+}
+
+export function getSliderAriaValueText(value: number): string {
+  return `${value}`;
+}
+
 export function getSliderAriaLabel(
   label: string,
   value: SliderValue,
@@ -78,18 +91,28 @@ const SliderComponent: FC<Props> = ({ data, setStateValue }) => {
     disabled,
   } = data;
   const [displayedValue, setDisplayedValue] = useState<SliderValue>(() =>
-    normalizeSliderValue(selectedValue),
+    clampSliderValue(normalizeSliderValue(selectedValue), minValue, maxValue),
   );
   const previousSelectedValue = useRef<SliderValue>(
     normalizeSliderValue(selectedValue),
   );
+  const previousBoundsRef = useRef({ minValue, maxValue });
 
   useEffect(() => {
-    if (!sliderValuesEqual(previousSelectedValue.current, selectedValue)) {
+    const boundsChanged =
+      previousBoundsRef.current.minValue !== minValue ||
+      previousBoundsRef.current.maxValue !== maxValue;
+    previousBoundsRef.current = { minValue, maxValue };
+    if (
+      boundsChanged ||
+      !sliderValuesEqual(previousSelectedValue.current, selectedValue)
+    ) {
       previousSelectedValue.current = normalizeSliderValue(selectedValue);
-      setDisplayedValue(normalizeSliderValue(selectedValue));
+      setDisplayedValue(
+        clampSliderValue(normalizeSliderValue(selectedValue), minValue, maxValue),
+      );
     }
-  }, [selectedValue]);
+  }, [selectedValue, minValue, maxValue]);
 
   const handleChange = useCallback(
     (_event: Event, newValue: number | number[]) => {
@@ -105,15 +128,24 @@ const SliderComponent: FC<Props> = ({ data, setStateValue }) => {
     [setStateValue],
   );
 
+  const hasLabel = label.trim() !== "";
+
   return (
     <Box sx={{ width: "100%", px: 1, py: 0.5 }}>
-      <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500 }}>
-        {label}
-      </Typography>
+      {hasLabel && (
+        <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500 }}>
+          {label}
+        </Typography>
+      )}
       <MuiSlider
         getAriaLabel={(index) =>
-          getSliderAriaLabel(label, displayedValue, index)
+          getSliderAriaLabel(
+            hasLabel ? label : "Slider",
+            displayedValue,
+            index,
+          )
         }
+        getAriaValueText={getSliderAriaValueText}
         value={displayedValue}
         min={minValue}
         max={maxValue}

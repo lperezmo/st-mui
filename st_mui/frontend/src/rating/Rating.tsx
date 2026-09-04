@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useId, useState } from "react";
+import { FC, useCallback, useEffect, useId, useRef, useState } from "react";
 import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import Box from "@mui/material/Box";
 import MuiRating from "@mui/material/Rating";
@@ -58,9 +58,13 @@ const RatingComponent: FC<Props> = ({ data, setStateValue }) => {
   } = data;
   const name = useId();
   const [selected, setSelected] = useState<number | null>(selectedValue);
+  const previousExternalRef = useRef<number | null>(selectedValue);
 
   useEffect(() => {
-    setSelected(selectedValue);
+    if (previousExternalRef.current !== selectedValue) {
+      previousExternalRef.current = selectedValue;
+      setSelected((current) => (current === selectedValue ? current : selectedValue));
+    }
   }, [selectedValue]);
 
   const handleChange = useCallback(
@@ -77,14 +81,18 @@ const RatingComponent: FC<Props> = ({ data, setStateValue }) => {
     [clearable, disabled, readOnly, selected, setStateValue],
   );
 
+  const hasLabel = label.trim() !== "";
+
   return (
     <Box
       component="fieldset"
       sx={{ width: "100%", border: 0, m: 0, minWidth: 0, p: 0, py: 0.5 }}
     >
-      <Typography component="legend" variant="body2" sx={{ mb: 0.5 }}>
-        {label}
-      </Typography>
+      {hasLabel && (
+        <Typography component="legend" variant="body2" sx={{ mb: 0.5 }}>
+          {label}
+        </Typography>
+      )}
       <MuiRating
         name={name}
         value={selected}

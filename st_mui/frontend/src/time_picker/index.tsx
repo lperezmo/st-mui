@@ -5,5 +5,6 @@ import TimePickerComponent, {
 } from "./TimePicker";
 
 export default createMuiRenderer<TimePickerState, TimePickerData>(
-  TimePickerComponent
+  TimePickerComponent,
+  { emotionKey: "st-mui-time-picker" },
 );

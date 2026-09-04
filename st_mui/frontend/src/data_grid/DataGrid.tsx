@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import {
   DataGrid as MuiDataGrid,
   GridColDef,
@@ -71,10 +72,23 @@ export function sameGridRowId(left: GridRowId, right: GridRowId): boolean {
 }
 
 export function sameGridRowIds(left: GridRowId[], right: GridRowId[]): boolean {
-  return (
-    left.length === right.length &&
-    left.every((id, index) => sameGridRowId(id, right[index]))
-  );
+  // Selection order is not semantically meaningful (header select-all,
+  // shift-click, and Python round-trips can reorder). Compare as multisets
+  // so equivalent selections don't ping-pong setStateValue.
+  if (left.length !== right.length) return false;
+  const remaining = [...right];
+  for (const id of left) {
+    const index = remaining.findIndex((candidate) =>
+      sameGridRowId(candidate, id),
+    );
+    if (index === -1) return false;
+    remaining.splice(index, 1);
+  }
+  return true;
+}
+
+export function gridRowIdKey(id: GridRowId): string {
+  return `${typeof id}:${String(id)}`;
 }
 
 export function sameGridModel(left: unknown, right: unknown): boolean {
@@ -186,9 +200,8 @@ const DataGridComponent: FC<Props> = ({
       selectedRows,
       sameGridRowIds,
     );
-    const next = source.filter((id) =>
-      allRowIds.some((candidate) => sameGridRowId(candidate, id)),
-    );
+    const validIdKeys = new Set(allRowIds.map(gridRowIdKey));
+    const next = source.filter((id) => validIdKeys.has(gridRowIdKey(id)));
     const stateChanged = !sameGridRowIds(selectedRowsRef.current, next);
     selectedRowsRef.current = next;
     previousSelectedRowsRef.current = selectedRows;
@@ -272,11 +285,14 @@ const DataGridComponent: FC<Props> = ({
   const handleSort = useCallback(
     (model: GridSortModel) => {
       if (disabled) return;
-      setSort(model);
-      if (sameGridModel(sortRef.current, model)) return;
-      sortRef.current = model;
-      setStateValue("sort_model", model);
-      emit({ type: "sort", value: model });
+      // Community single-sort contract: Python slices to one item, so clamp
+      // locally too or the grid diverges until the next prop sync.
+      const next = model.slice(0, 1);
+      setSort(next);
+      if (sameGridModel(sortRef.current, next)) return;
+      sortRef.current = next;
+      setStateValue("sort_model", next);
+      emit({ type: "sort", value: next });
     },
     [disabled, emit, setStateValue],
   );
@@ -284,11 +300,13 @@ const DataGridComponent: FC<Props> = ({
   const handleFilter = useCallback(
     (model: GridFilterModel) => {
       if (disabled) return;
-      setFilter(model);
-      if (sameGridModel(filterRef.current, model)) return;
-      filterRef.current = model;
-      setStateValue("filter_model", model);
-      emit({ type: "filter", value: model });
+      // Same single-filter contract as sorting: clamp locally.
+      const next = { ...model, items: model.items.slice(0, 1) };
+      setFilter(next);
+      if (sameGridModel(filterRef.current, next)) return;
+      filterRef.current = next;
+      setStateValue("filter_model", next);
+      emit({ type: "filter", value: next });
     },
     [disabled, emit, setStateValue],
   );
@@ -311,6 +329,16 @@ const DataGridComponent: FC<Props> = ({
     [disabled, emit, pageSize, pageSizeOptions, rows.length, setStateValue],
   );
 
+  if (columns.length === 0) {
+    return (
+      <Box sx={{ width: "100%", height }}>
+        <Typography variant="body2" color="text.secondary">
+          No columns
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box
       aria-disabled={disabled}
@@ -318,7 +346,9 @@ const DataGridComponent: FC<Props> = ({
         width: "100%",
         height,
         opacity: disabled ? 0.6 : 1,
-        pointerEvents: disabled ? "none" : undefined,
+        // Keep scroll enabled when disabled so large grids remain
+        // inspectable; interaction is blocked via rowSelection guards,
+        // disable* props, and early returns in the handlers above.
       }}
     >
       <MuiDataGrid

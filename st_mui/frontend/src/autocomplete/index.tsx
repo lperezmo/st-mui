@@ -6,4 +6,5 @@ import AutocompleteComponent, {
 
 export default createMuiRenderer<AutocompleteState, AutocompleteData>(
   AutocompleteComponent,
+  { emotionKey: "st-mui-autocomplete" },
 );

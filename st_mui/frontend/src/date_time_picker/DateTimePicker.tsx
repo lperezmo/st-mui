@@ -6,7 +6,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker as MuiDateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { serializeWallClockDateTime } from "../shared/datetime";
-import { createPickerId } from "../shared/id";
+import { usePickerId } from "../shared/id";
 import { resolveTimeSteps } from "../shared/timeSteps";
 import type {
   DateOrTimeView,
@@ -116,7 +116,7 @@ const DateTimePickerComponent: FC<Props> = ({ data, setStateValue }) => {
     serializeWallClockDateTime(parseDateTimePickerValue(value)),
   );
   const previousExternalValueRef = useRef(value);
-  const inputId = useMemo(() => createPickerId("date-time-picker"), []);
+  const inputId = usePickerId("date-time-picker");
 
   useEffect(() => {
     if (previousExternalValueRef.current !== value) {
@@ -151,11 +151,11 @@ const DateTimePickerComponent: FC<Props> = ({ data, setStateValue }) => {
   );
 
   const minDayjs = useMemo(
-    () => (minDatetime ? dayjs(minDatetime) : undefined),
+    () => parseDateTimePickerValue(minDatetime) ?? undefined,
     [minDatetime],
   );
   const maxDayjs = useMemo(
-    () => (maxDatetime ? dayjs(maxDatetime) : undefined),
+    () => parseDateTimePickerValue(maxDatetime) ?? undefined,
     [maxDatetime],
   );
 

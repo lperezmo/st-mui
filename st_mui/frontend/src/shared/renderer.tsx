@@ -38,13 +38,27 @@ export function createMuiRenderer<
     setStateValue: FrontendRendererArgs<TState, TData>["setStateValue"];
     setTriggerValue: FrontendRendererArgs<TState, TData>["setTriggerValue"];
   }>,
+  options?: { emotionKey?: string },
 ): FrontendRenderer<TState, TData> {
+  // Namespaced per component so independent Vite bundles don't share the
+  // same Emotion prefix ("st-mui") and collide in document.head.
+  const emotionKey = (options?.emotionKey ?? "st-mui")
+    .toLowerCase()
+    .replace(/[^a-z-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "st-mui";
   return (args) => {
     const { data, parentElement, setStateValue, setTriggerValue } = args;
 
     const rootElement = parentElement.querySelector(".react-root");
     if (!rootElement) {
-      throw new Error("React root element (.react-root) not found");
+      throw new Error(
+        "React root element (.react-root) not found: ensure the Python " +
+          "component html template contains <div class=\"react-root\"></div>",
+      );
+    }
+    if (data === null || data === undefined) {
+      throw new Error("st-mui component received empty data payload");
     }
 
     let reactRoot = reactRoots.get(parentElement);
@@ -53,12 +67,13 @@ export function createMuiRenderer<
       reactRoots.set(parentElement, reactRoot);
     }
 
-    // Emotion cache scoped with a unique key so MUI class names
-    // don't collide with Streamlit's own styles.
+    // Emotion cache scoped per container with a component-namespaced key so
+    // MUI class names don't collide with Streamlit's own styles or with
+    // other st-mui bundles on the same page.
     let emotionCache = emotionCaches.get(parentElement);
     if (!emotionCache) {
       emotionCache = createCache({
-        key: "st-mui",
+        key: emotionKey,
         prepend: true,
       });
       emotionCaches.set(parentElement, emotionCache);
@@ -66,9 +81,11 @@ export function createMuiRenderer<
 
     // Streamlit declares its --st-* custom properties on the element
     // container, not on :root, so the theme must be read from inside the app
-    // subtree. `host` covers the shadow-root case if isolation is ever enabled.
+    // subtree. getRootNode().host covers the shadow-root case if isolation
+    // is ever enabled; otherwise use the container itself.
+    const rootNode = parentElement.getRootNode?.() as ShadowRoot | null;
     const themeHost =
-      (parentElement as unknown as { host?: Element }).host ??
+      (rootNode && (rootNode as ShadowRoot).host) ??
       (parentElement as unknown as Element);
     const theme = getStreamlitMuiTheme(themeHost);
 
@@ -94,6 +111,9 @@ export function createMuiRenderer<
         root.unmount();
         reactRoots.delete(parentElement);
       }
+      // Drop the cache reference so a future mount creates a fresh one. The
+      // injected <style> tags are intentionally left in document.head: other
+      // mounted instances share the same key/prefix and still need them.
       emotionCaches.delete(parentElement);
     };
   };
