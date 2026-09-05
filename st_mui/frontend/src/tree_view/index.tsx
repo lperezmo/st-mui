@@ -1,5 +1,6 @@
 import { createMuiRenderer } from "../shared/renderer";
-import TreeViewComponent, {
+import TreeViewComponent from "./TreeView";
+import type {
   TreeViewState,
   TreeViewData,
 } from "./TreeView";

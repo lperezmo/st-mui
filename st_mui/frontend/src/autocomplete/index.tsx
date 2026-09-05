@@ -1,5 +1,6 @@
 import { createMuiRenderer } from "../shared/renderer";
-import AutocompleteComponent, {
+import AutocompleteComponent from "./Autocomplete";
+import type {
   AutocompleteData,
   AutocompleteState,
 } from "./Autocomplete";

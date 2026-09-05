@@ -5,16 +5,19 @@
  * Shadow DOM). Emotion styles inject into document.head and MUI popovers
  * portal to document.body — both work correctly in this mode.
  */
-import {
+import type {
   FrontendRenderer,
   FrontendRendererArgs,
 } from "@streamlit/component-v2-lib";
-import { StrictMode, FC } from "react";
-import { createRoot, Root } from "react-dom/client";
+import { StrictMode } from "react";
+import type { FC } from "react";
+import { createRoot } from "react-dom/client";
+import type { Root } from "react-dom/client";
 import { ThemeProvider } from "@mui/material/styles";
 import ScopedCssBaseline from "@mui/material/ScopedCssBaseline";
 import { CacheProvider } from "@emotion/react";
-import createCache, { EmotionCache } from "@emotion/cache";
+import createCache from "@emotion/cache";
+import type { EmotionCache } from "@emotion/cache";
 import { getStreamlitMuiTheme } from "./theme";
 
 const reactRoots: WeakMap<FrontendRendererArgs["parentElement"], Root> =

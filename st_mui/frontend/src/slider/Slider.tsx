@@ -1,5 +1,6 @@
-import { FC, useCallback, useEffect, useRef, useState } from "react";
-import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { FC } from "react";
+import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import Box from "@mui/material/Box";
 import MuiSlider from "@mui/material/Slider";
 import Typography from "@mui/material/Typography";

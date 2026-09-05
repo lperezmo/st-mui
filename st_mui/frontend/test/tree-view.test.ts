@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { isTreeItemDisabled } from "../src/tree_view/TreeView";
+import { normalizeTreeSelection } from "../src/tree_view/TreeView";
 
-describe("TreeView disabled state", () => {
-  it("disables every item when the component is disabled", () => {
-    expect(isTreeItemDisabled(true)).toBe(true);
-    expect(isTreeItemDisabled(false)).toBe(false);
+describe("TreeView selection normalization", () => {
+  it("keeps every id in multi-select mode", () => {
+    expect(normalizeTreeSelection(["a", "b"], true)).toEqual(["a", "b"]);
+  });
+
+  it("clamps to one id in single-select mode", () => {
+    expect(normalizeTreeSelection(["a", "b"], false)).toEqual(["a"]);
+    expect(normalizeTreeSelection(["a"], false)).toEqual(["a"]);
+    expect(normalizeTreeSelection([], false)).toEqual([]);
   });
 });

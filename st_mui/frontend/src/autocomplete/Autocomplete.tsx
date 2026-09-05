@@ -1,5 +1,6 @@
-import { FC, useCallback, useEffect, useRef, useState } from "react";
-import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { FC } from "react";
+import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import MuiAutocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";

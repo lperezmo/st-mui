@@ -1,5 +1,6 @@
 import { createMuiRenderer } from "../shared/renderer";
-import DataGridComponent, { DataGridData, DataGridState } from "./DataGrid";
+import DataGridComponent from "./DataGrid";
+import type { DataGridData, DataGridState } from "./DataGrid";
 
 export default createMuiRenderer<DataGridState, DataGridData>(
   DataGridComponent,
