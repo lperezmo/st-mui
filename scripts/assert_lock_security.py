@@ -8,6 +8,7 @@ from pathlib import Path
 import tomllib
 
 MINIMUM_VERSIONS = {
+    "tornado": (6, 5, 8),
     # Includes GitPython advisories fixed in 3.1.58.
     "gitpython": (3, 1, 58),
     "click": (8, 3, 3),
