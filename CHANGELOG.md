@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.5.9 (2026-09-12)
+
+### Bug Fixes
+
+- **deps**: Resolve dependency security alerts
+  ([`57fbb6d`](https://github.com/lperezmo/st-mui/commit/57fbb6d405c9297eece3ef202a3cb333a8f5b210))
+
+
 ## v0.5.8 (2026-09-04)
 
 ### Bug Fixes
