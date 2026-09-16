@@ -1,7 +1,7 @@
 import { createMuiRenderer } from "../shared/renderer";
 import AutocompleteComponent, {
-  AutocompleteData,
-  AutocompleteState,
+  type AutocompleteData,
+  type AutocompleteState,
 } from "./Autocomplete";
 
 export default createMuiRenderer<AutocompleteState, AutocompleteData>(

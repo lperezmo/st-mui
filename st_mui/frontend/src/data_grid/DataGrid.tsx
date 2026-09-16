@@ -1,16 +1,16 @@
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import {
   DataGrid as MuiDataGrid,
-  GridColDef,
-  GridFilterModel,
-  GridPaginationModel,
-  GridRowId,
-  GridRowSelectionModel,
-  GridSortModel,
-  GridValidRowModel,
+  type GridColDef,
+  type GridFilterModel,
+  type GridPaginationModel,
+  type GridRowId,
+  type GridRowSelectionModel,
+  type GridSortModel,
+  type GridValidRowModel,
 } from "@mui/x-data-grid";
 
 export type DataGridEvent = {

@@ -1,7 +1,7 @@
 import { createMuiRenderer } from "../shared/renderer";
 import DateTimeRangePickerComponent, {
-  DateTimeRangePickerState,
-  DateTimeRangePickerData,
+  type DateTimeRangePickerState,
+  type DateTimeRangePickerData,
 } from "./DateTimeRangePicker";
 
 export default createMuiRenderer<
