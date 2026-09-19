@@ -1,9 +1,9 @@
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
-import { TreeViewBaseItem } from "@mui/x-tree-view/models";
+import type { TreeViewBaseItem } from "@mui/x-tree-view/models";
 
 export type TreeViewState = {
   selected_items: string[];
@@ -28,10 +28,6 @@ type Props = {
   >["setStateValue"];
 };
 
-export function isTreeItemDisabled(disabled: boolean): boolean {
-  return disabled;
-}
-
 export function sameTreeIds(left: string[], right: string[]): boolean {
   return (
     left.length === right.length && left.every((id, index) => id === right[index])
@@ -46,8 +42,18 @@ export function reconcileTreeIds(
   return sameTreeIds(previousExternal, nextExternal) ? current : [...nextExternal];
 }
 
+// Keeps the first occurrence of each known id. Python already rejects unknown
+// and duplicate ids in defaults, so this upholds the same invariant for ids
+// that arrive from MUI callbacks.
 export function filterValidTreeIds(ids: string[], validIds: Set<string>): string[] {
-  return ids.filter((id) => validIds.has(id));
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const id of ids) {
+    if (!validIds.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    result.push(id);
+  }
+  return result;
 }
 
 export function collectTreeIds(items: TreeViewBaseItem[]): Set<string> {
@@ -134,14 +140,9 @@ const TreeViewComponent: FC<Props> = ({ data, setStateValue }) => {
       const next =
         itemIds === null ? [] : Array.isArray(itemIds) ? itemIds : [itemIds];
       const filtered = filterValidTreeIds(next, validIds);
-      const normalized =
-        multiSelect && filtered.length > 1 ? filtered : filtered;
       // Single-select mode keeps at most one id; Python already rejects
       // multi defaults, but guard here against uncontrolled MUI behavior.
-      const finalIds =
-        multiSelect || normalized.length <= 1
-          ? normalized
-          : normalized.slice(0, 1);
+      const finalIds = multiSelect ? filtered : filtered.slice(0, 1);
       if (sameTreeIds(selectedRef.current, finalIds)) return;
       selectedRef.current = finalIds;
       setSelected(finalIds);

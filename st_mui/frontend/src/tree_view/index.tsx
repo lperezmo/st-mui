@@ -1,7 +1,7 @@
 import { createMuiRenderer } from "../shared/renderer";
 import TreeViewComponent, {
-  TreeViewState,
-  TreeViewData,
+  type TreeViewState,
+  type TreeViewData,
 } from "./TreeView";
 
 export default createMuiRenderer<TreeViewState, TreeViewData>(

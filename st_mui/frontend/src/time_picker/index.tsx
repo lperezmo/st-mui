@@ -1,7 +1,7 @@
 import { createMuiRenderer } from "../shared/renderer";
 import TimePickerComponent, {
-  TimePickerState,
-  TimePickerData,
+  type TimePickerState,
+  type TimePickerData,
 } from "./TimePicker";
 
 export default createMuiRenderer<TimePickerState, TimePickerData>(

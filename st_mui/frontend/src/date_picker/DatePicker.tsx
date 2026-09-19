@@ -1,6 +1,6 @@
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FrontendRendererArgs } from "@streamlit/component-v2-lib";
-import dayjs, { Dayjs } from "dayjs";
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
+import dayjs, { type Dayjs } from "dayjs";
 import Box from "@mui/material/Box";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";

@@ -10,7 +10,7 @@
  * Streamlit's stock palette, which is why every caller must pass the host
  * element the component renders into.
  */
-import { createTheme, Theme } from "@mui/material/styles";
+import { createTheme, type Theme } from "@mui/material/styles";
 
 function readVars(host?: Element | null): CSSStyleDeclaration {
   return getComputedStyle(host ?? document.documentElement);
