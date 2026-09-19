@@ -234,6 +234,34 @@ describe("TreeView callbacks and controlled state", () => {
     );
   });
 
+  it("forwards presentation props and renders the label", () => {
+    const items = [
+      { id: "a", label: "A" },
+      { id: "b", label: "B" },
+    ];
+    const tree = renderTree({
+      items,
+      multiSelect: true,
+      checkboxSelection: true,
+      label: "Regions",
+    });
+    expect(tree.props.items).toBe(items);
+    expect(tree.props.multiSelect).toBe(true);
+    expect(tree.props.checkboxSelection).toBe(true);
+    expect(tree.props["aria-label"]).toBe("Regions");
+    expect(screen.getByText("Regions")).toBeTruthy();
+  });
+
+  it.each([null, "", "   "])(
+    "falls back to a generic aria-label for %j",
+    (label) => {
+      const tree = renderTree({ label });
+      expect(tree.props["aria-label"]).toBe("Tree view");
+      expect(tree.props.multiSelect).toBe(false);
+      expect(tree.props.checkboxSelection).toBe(false);
+    },
+  );
+
   it("renders the empty state without mounting a MUI tree", () => {
     const tree = renderTree({ items: [] });
     expect(tree.mountCount).toBe(0);
