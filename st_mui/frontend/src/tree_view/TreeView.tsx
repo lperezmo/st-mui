@@ -42,8 +42,18 @@ export function reconcileTreeIds(
   return sameTreeIds(previousExternal, nextExternal) ? current : [...nextExternal];
 }
 
+// Keeps the first occurrence of each known id. Python already rejects unknown
+// and duplicate ids in defaults, so this upholds the same invariant for ids
+// that arrive from MUI callbacks.
 export function filterValidTreeIds(ids: string[], validIds: Set<string>): string[] {
-  return ids.filter((id) => validIds.has(id));
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const id of ids) {
+    if (!validIds.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    result.push(id);
+  }
+  return result;
 }
 
 export function collectTreeIds(items: TreeViewBaseItem[]): Set<string> {

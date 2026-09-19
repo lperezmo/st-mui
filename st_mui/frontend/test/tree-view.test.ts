@@ -1,20 +1,21 @@
+// @vitest-environment jsdom
 import { createElement } from "react";
-import { act, create, type ReactTestRenderer } from "react-test-renderer";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import type { RichTreeViewProps } from "@mui/x-tree-view/RichTreeView";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import TreeViewComponent, {
   type TreeViewData,
 } from "../src/tree_view/TreeView";
 
 type TreeProps = RichTreeViewProps<TreeViewData["items"][number], boolean>;
 
-vi.mock("@mui/x-tree-view/RichTreeView", () => ({
-  RichTreeView: (_props: TreeProps) => null,
+const { richTreeView } = vi.hoisted(() => ({
+  richTreeView: vi.fn<(props: unknown) => null>(() => null),
 }));
 
-import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
-
-const renderers: ReactTestRenderer[] = [];
+vi.mock("@mui/x-tree-view/RichTreeView", () => ({
+  RichTreeView: richTreeView,
+}));
 
 function renderTree(overrides: Partial<TreeViewData> = {}) {
   let data: TreeViewData = {
@@ -31,34 +32,34 @@ function renderTree(overrides: Partial<TreeViewData> = {}) {
     ...overrides,
   };
   const setStateValue = vi.fn();
-  let renderer!: ReactTestRenderer;
-  act(() => {
-    renderer = create(
-      createElement(TreeViewComponent, { data, setStateValue }),
-    );
-  });
-  renderers.push(renderer);
+  const view = render(
+    createElement(TreeViewComponent, { data, setStateValue }),
+  );
   return {
     get props(): TreeProps {
-      return renderer.root.findByType(RichTreeView).props as TreeProps;
+      const call = richTreeView.mock.calls.at(-1);
+      if (!call) throw new Error("RichTreeView was never rendered");
+      return call[0] as TreeProps;
     },
-    renderer,
+    get mountCount(): number {
+      return richTreeView.mock.calls.length;
+    },
     setStateValue,
-    update(overrides: Partial<TreeViewData>) {
-      data = { ...data, ...overrides };
-      act(() => {
-        renderer.update(
-          createElement(TreeViewComponent, { data, setStateValue }),
-        );
-      });
+    update(next: Partial<TreeViewData>) {
+      data = { ...data, ...next };
+      view.rerender(
+        createElement(TreeViewComponent, { data, setStateValue }),
+      );
     },
   };
 }
 
+beforeEach(() => {
+  richTreeView.mockClear();
+});
+
 afterEach(() => {
-  act(() => {
-    for (const renderer of renderers.splice(0)) renderer.unmount();
-  });
+  cleanup();
 });
 
 describe("TreeView callbacks and controlled state", () => {
@@ -133,14 +134,19 @@ describe("TreeView callbacks and controlled state", () => {
     },
   );
 
-  it("preserves existing duplicate-ID behavior in multi-selection", () => {
+  it("collapses duplicate ids to the first occurrence", () => {
     const tree = renderTree({ multiSelect: true });
-    act(() => tree.props.onSelectedItemsChange!(null, ["a", "a"]));
-    expect(tree.props.selectedItems).toEqual(["a", "a"]);
+    act(() => tree.props.onSelectedItemsChange!(null, ["b", "a", "b"]));
+    expect(tree.props.selectedItems).toEqual(["b", "a"]);
     expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
       "selected_items",
-      ["a", "a"],
+      ["b", "a"],
     );
+    act(() => tree.props.onExpandedItemsChange!(null, ["a", "a"]));
+    expect(tree.props.expandedItems).toEqual(["a"]);
+    expect(tree.setStateValue).toHaveBeenLastCalledWith("expanded_items", [
+      "a",
+    ]);
   });
 
   it("does not emit unchanged selections or repeated callbacks after rerenders", () => {
@@ -230,8 +236,8 @@ describe("TreeView callbacks and controlled state", () => {
 
   it("renders the empty state without mounting a MUI tree", () => {
     const tree = renderTree({ items: [] });
-    expect(tree.renderer.root.findAllByType(RichTreeView)).toHaveLength(0);
-    expect(JSON.stringify(tree.renderer.toJSON())).toContain("No items");
+    expect(tree.mountCount).toBe(0);
+    expect(screen.getByText("No items")).toBeTruthy();
     expect(tree.setStateValue).not.toHaveBeenCalled();
   });
 });
