@@ -10,14 +10,8 @@ import {
   reconcileTreeIds,
   sameTreeIds,
 } from "../src/tree_view/TreeView";
-import {
-  gridRowIdKey,
-  sameGridRowIds,
-} from "../src/data_grid/DataGrid";
-import {
-  clampSliderValue,
-  getSliderAriaValueText,
-} from "../src/slider/Slider";
+import { gridRowIdKey, sameGridRowIds } from "../src/data_grid/DataGrid";
+import { clampSliderValue, getSliderAriaValueText } from "../src/slider/Slider";
 import {
   getAutocompleteOptionLabel,
   isAutocompleteOptionDisabled,
@@ -109,9 +103,9 @@ describe("slider helpers", () => {
   it("clamps values to bounds", () => {
     expect(clampSliderValue(150, 0, 100)).toBe(100);
     expect(clampSliderValue(-5, 0, 100)).toBe(0);
-    expect(clampSliderValue([-10, 150] as unknown as number[], 0, 100)).toEqual([
-      0, 100,
-    ]);
+    expect(clampSliderValue([-10, 150] as unknown as number[], 0, 100)).toEqual(
+      [0, 100],
+    );
   });
 
   it("formats aria value text", () => {
@@ -123,7 +117,11 @@ describe("autocomplete helpers", () => {
   it("labels malformed options without crashing", () => {
     expect(getAutocompleteOptionLabel("typed")).toBe("typed");
     expect(
-      getAutocompleteOptionLabel({ label: "LA", value: "LAX", disabled: false }),
+      getAutocompleteOptionLabel({
+        label: "LA",
+        value: "LAX",
+        disabled: false,
+      }),
     ).toBe("LA");
     expect(getAutocompleteOptionLabel(null)).toBe("");
     expect(getAutocompleteOptionLabel(undefined)).toBe("");
@@ -141,9 +139,7 @@ describe("autocomplete helpers", () => {
     expect(isAutocompleteOptionEqual(option, "Los Angeles")).toBe(true);
     expect(isAutocompleteOptionEqual(option, "LAX")).toBe(true);
     expect(isAutocompleteOptionEqual(option, "Other")).toBe(false);
-    expect(
-      isAutocompleteOptionEqual(option, { ...option }),
-    ).toBe(true);
+    expect(isAutocompleteOptionEqual(option, { ...option })).toBe(true);
   });
 });
 

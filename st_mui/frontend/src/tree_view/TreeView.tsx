@@ -1,4 +1,11 @@
-import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -30,7 +37,8 @@ type Props = {
 
 export function sameTreeIds(left: string[], right: string[]): boolean {
   return (
-    left.length === right.length && left.every((id, index) => id === right[index])
+    left.length === right.length &&
+    left.every((id, index) => id === right[index])
   );
 }
 
@@ -39,13 +47,18 @@ export function reconcileTreeIds(
   previousExternal: string[],
   nextExternal: string[],
 ): string[] {
-  return sameTreeIds(previousExternal, nextExternal) ? current : [...nextExternal];
+  return sameTreeIds(previousExternal, nextExternal)
+    ? current
+    : [...nextExternal];
 }
 
 // Keeps the first occurrence of each known id. Python already rejects unknown
 // and duplicate ids in defaults, so this upholds the same invariant for ids
 // that arrive from MUI callbacks.
-export function filterValidTreeIds(ids: string[], validIds: Set<string>): string[] {
+export function filterValidTreeIds(
+  ids: string[],
+  validIds: Set<string>,
+): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
   for (const id of ids) {

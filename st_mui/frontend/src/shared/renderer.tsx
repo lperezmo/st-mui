@@ -42,11 +42,12 @@ export function createMuiRenderer<
 ): FrontendRenderer<TState, TData> {
   // Namespaced per component so independent Vite bundles don't share the
   // same Emotion prefix ("st-mui") and collide in document.head.
-  const emotionKey = (options?.emotionKey ?? "st-mui")
-    .toLowerCase()
-    .replace(/[^a-z-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "") || "st-mui";
+  const emotionKey =
+    (options?.emotionKey ?? "st-mui")
+      .toLowerCase()
+      .replace(/[^a-z-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "") || "st-mui";
   return (args) => {
     const { data, parentElement, setStateValue, setTriggerValue } = args;
 
@@ -54,7 +55,7 @@ export function createMuiRenderer<
     if (!rootElement) {
       throw new Error(
         "React root element (.react-root) not found: ensure the Python " +
-          "component html template contains <div class=\"react-root\"></div>",
+          'component html template contains <div class="react-root"></div>',
       );
     }
     if (data === null || data === undefined) {

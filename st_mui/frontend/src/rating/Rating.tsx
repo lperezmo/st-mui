@@ -1,4 +1,11 @@
-import { type FC, useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import Box from "@mui/material/Box";
 import MuiRating from "@mui/material/Rating";
@@ -63,7 +70,9 @@ const RatingComponent: FC<Props> = ({ data, setStateValue }) => {
   useEffect(() => {
     if (previousExternalRef.current !== selectedValue) {
       previousExternalRef.current = selectedValue;
-      setSelected((current) => (current === selectedValue ? current : selectedValue));
+      setSelected((current) =>
+        current === selectedValue ? current : selectedValue,
+      );
     }
   }, [selectedValue]);
 

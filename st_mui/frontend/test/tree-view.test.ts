@@ -47,9 +47,7 @@ function renderTree(overrides: Partial<TreeViewData> = {}) {
     setStateValue,
     update(next: Partial<TreeViewData>) {
       data = { ...data, ...next };
-      view.rerender(
-        createElement(TreeViewComponent, { data, setStateValue }),
-      );
+      view.rerender(createElement(TreeViewComponent, { data, setStateValue }));
     },
   };
 }

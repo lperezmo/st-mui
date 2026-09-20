@@ -1,4 +1,11 @@
-import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import dayjs, { type Dayjs } from "dayjs";
 import Box from "@mui/material/Box";
@@ -254,14 +261,8 @@ const DateRangePickerComponent: FC<Props> = ({
     [clearable, disabled, readOnly, selected, setStateValue, setTriggerValue],
   );
 
-  const minDayjs = useMemo(
-    () => parseDate(minDate) ?? undefined,
-    [minDate],
-  );
-  const maxDayjs = useMemo(
-    () => parseDate(maxDate) ?? undefined,
-    [maxDate],
-  );
+  const minDayjs = useMemo(() => parseDate(minDate) ?? undefined, [minDate]);
+  const maxDayjs = useMemo(() => parseDate(maxDate) ?? undefined, [maxDate]);
   const { startMax, endMin } = getDateRangeBounds(minDayjs, maxDayjs, selected);
 
   const commonProps = useMemo(

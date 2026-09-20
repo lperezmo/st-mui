@@ -48,7 +48,11 @@ function parseRgbColor(color: string): [number, number, number] | null {
   // rgb(1 2 3) / rgb(1 2 3 / 50%) used by newer Streamlit themes.
   const match = color.match(/rgba?\(([^)]+)\)/i);
   if (!match) return null;
-  const parts = match[1].split("/")[0].trim().split(/[\s,]+/).filter(Boolean);
+  const parts = match[1]
+    .split("/")[0]
+    .trim()
+    .split(/[\s,]+/)
+    .filter(Boolean);
   if (parts.length < 3) return null;
   const nums = parts.slice(0, 3).map((p) => {
     if (p.endsWith("%")) {
@@ -85,7 +89,11 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 function parseHslColor(color: string): [number, number, number] | null {
   const match = color.match(/hsla?\(([^)]+)\)/i);
   if (!match) return null;
-  const parts = match[1].split("/")[0].trim().split(/[\s,]+/).filter(Boolean);
+  const parts = match[1]
+    .split("/")[0]
+    .trim()
+    .split(/[\s,]+/)
+    .filter(Boolean);
   if (parts.length < 3) return null;
   const h = parseFloat(parts[0]);
   const s = parseFloat(parts[1].replace("%", "")) / 100;
@@ -106,7 +114,10 @@ export function parseCssColorToRgb(
   // Named colors, oklch(), color-mix(), etc: resolve via the browser when
   // available so custom Streamlit themes still detect dark mode correctly.
   try {
-    if (typeof document !== "undefined" && typeof getComputedStyle !== "undefined") {
+    if (
+      typeof document !== "undefined" &&
+      typeof getComputedStyle !== "undefined"
+    ) {
       const el = document.createElement("div");
       el.style.color = color;
       // Invalid assignments are dropped silently; empty means unparsable.
@@ -162,9 +173,7 @@ function isValidCssColor(value: string): boolean {
   }
   // Without CSS.supports (jsdom/happy-dom), accept anything our parser or the
   // browser can resolve; otherwise fall back to the stock palette.
-  return (
-    parseCssColorToRgb(value) !== null || value.startsWith("var(")
-  );
+  return parseCssColorToRgb(value) !== null || value.startsWith("var(");
 }
 
 function validCssColorOr(value: string, fallback: string): string {

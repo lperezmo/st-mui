@@ -109,7 +109,11 @@ const SliderComponent: FC<Props> = ({ data, setStateValue }) => {
     ) {
       previousSelectedValue.current = normalizeSliderValue(selectedValue);
       setDisplayedValue(
-        clampSliderValue(normalizeSliderValue(selectedValue), minValue, maxValue),
+        clampSliderValue(
+          normalizeSliderValue(selectedValue),
+          minValue,
+          maxValue,
+        ),
       );
     }
   }, [selectedValue, minValue, maxValue]);
@@ -139,11 +143,7 @@ const SliderComponent: FC<Props> = ({ data, setStateValue }) => {
       )}
       <MuiSlider
         getAriaLabel={(index) =>
-          getSliderAriaLabel(
-            hasLabel ? label : "Slider",
-            displayedValue,
-            index,
-          )
+          getSliderAriaLabel(hasLabel ? label : "Slider", displayedValue, index)
         }
         getAriaValueText={getSliderAriaValueText}
         value={displayedValue}
