@@ -1,4 +1,11 @@
-import { type FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { FrontendRendererArgs } from "@streamlit/component-v2-lib";
 import dayjs, { type Dayjs } from "dayjs";
 import Box from "@mui/material/Box";

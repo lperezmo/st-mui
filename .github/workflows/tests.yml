@@ -30,11 +30,13 @@ jobs:
       - run: uv lock --check
       - run: python scripts/assert_lock_security.py
 
-  # TypeScript type check of the frontend. Runs independently of the build
-  # (Vite transpiles without type-checking), so this is the only gate that
-  # catches type regressions such as passing a prop MUI does not accept.
+  # Unit tests, TypeScript type check, and Prettier check of the frontend. The
+  # type check runs independently of the build (Vite transpiles without
+  # type-checking), so it is the only gate that catches type regressions such
+  # as passing a prop MUI does not accept. format:check uses endOfLine "auto"
+  # so it agrees with CRLF working trees on Windows and LF checkouts here.
   frontend:
-    name: Test and typecheck frontend
+    name: Test, typecheck and format-check frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -47,6 +49,8 @@ jobs:
       - run: npm test
         working-directory: st_mui/frontend
       - run: npm run typecheck
+        working-directory: st_mui/frontend
+      - run: npm run format:check
         working-directory: st_mui/frontend
 
   # Build the frontend once and share the built assets with every test leg.

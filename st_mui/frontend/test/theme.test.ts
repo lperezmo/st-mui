@@ -19,7 +19,8 @@ function stubScopedTheme(
     const scoped = el === host;
     return {
       backgroundColor: scoped ? hostBackground : "rgba(0, 0, 0, 0)",
-      getPropertyValue: (name: string) => (scoped ? (hostVars[name] ?? "") : ""),
+      getPropertyValue: (name: string) =>
+        scoped ? (hostVars[name] ?? "") : "",
     };
   });
   vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
