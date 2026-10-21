@@ -53,9 +53,9 @@ def main() -> None:
 
     for package, minimum in MINIMUM_VERSIONS.items():
         version = resolved.get(package)
-        if version is None:
-            failures.append(f"{package} is missing from uv.lock")
-        elif release_tuple(version) < minimum:
+        # A package that drops out of the resolution (Streamlit 1.66 no longer
+        # pulls in tornado or GitPython) cannot carry its advisories.
+        if version is not None and release_tuple(version) < minimum:
             floor = ".".join(str(part) for part in minimum)
             failures.append(f"{package} {version} is below the secure floor {floor}")
 
@@ -63,7 +63,9 @@ def main() -> None:
         raise SystemExit("\n".join(failures))
 
     checked = ", ".join(
-        f"{package}=={resolved[package]}" for package in MINIMUM_VERSIONS
+        f"{package}=={resolved[package]}"
+        for package in MINIMUM_VERSIONS
+        if package in resolved
     )
     print(
         f"Lock/project versions agree at {expected_project_version}; "
