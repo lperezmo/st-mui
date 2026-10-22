@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { nextRatingValue, ratingLabelText } from "../src/rating/Rating";
 
 describe("rating state helpers", () => {

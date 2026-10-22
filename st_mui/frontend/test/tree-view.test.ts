@@ -1,19 +1,18 @@
-// @vitest-environment jsdom
 import { createElement } from "react";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import type { RichTreeViewProps } from "@mui/x-tree-view/RichTreeView";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import TreeViewComponent, {
   type TreeViewData,
 } from "../src/tree_view/TreeView";
 
 type TreeProps = RichTreeViewProps<TreeViewData["items"][number], boolean>;
 
-const { richTreeView } = vi.hoisted(() => ({
-  richTreeView: vi.fn<(props: unknown) => null>(() => null),
-}));
+const richTreeView = mock((_props: unknown): null => null);
 
-vi.mock("@mui/x-tree-view/RichTreeView", () => ({
+// mock.module is not hoisted the way vitest's mock was, but Bun patches the
+// live bindings of a module that is already loaded, so TreeView renders the stub.
+mock.module("@mui/x-tree-view/RichTreeView", () => ({
   RichTreeView: richTreeView,
 }));
 
@@ -31,7 +30,7 @@ function renderTree(overrides: Partial<TreeViewData> = {}) {
     disabled: false,
     ...overrides,
   };
-  const setStateValue = vi.fn();
+  const setStateValue = mock();
   const view = render(
     createElement(TreeViewComponent, { data, setStateValue }),
   );
@@ -85,7 +84,7 @@ describe("TreeView callbacks and controlled state", () => {
     expect(tree.props.expandedItems).toEqual([]);
   });
 
-  it.each([
+  it.each<{ input: string | string[] | null; expected: string[] }>([
     { input: "b", expected: ["b"] },
     { input: ["missing", "b", "a"], expected: ["b"] },
     { input: ["missing"], expected: [] },
@@ -95,10 +94,9 @@ describe("TreeView callbacks and controlled state", () => {
     const tree = renderTree({ defaultSelected: ["a"] });
     const original = Array.isArray(input) ? [...input] : input;
     act(() => tree.props.onSelectedItemsChange!(null, input));
-    expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
-      "selected_items",
-      expected,
-    );
+    expect(tree.setStateValue.mock.calls).toEqual([
+      ["selected_items", expected],
+    ]);
     expect(tree.props.selectedItems).toBe(expected[0] ?? null);
     expect(input).toEqual(original);
   });
@@ -107,15 +105,16 @@ describe("TreeView callbacks and controlled state", () => {
     const tree = renderTree({ multiSelect: true });
     const input = ["b", "missing", "a"];
     act(() => tree.props.onSelectedItemsChange!(null, input));
-    expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
-      "selected_items",
-      ["b", "a"],
-    );
+    expect(tree.setStateValue.mock.calls).toEqual([
+      ["selected_items", ["b", "a"]],
+    ]);
     expect(tree.props.selectedItems).toEqual(["b", "a"]);
     expect(input).toEqual(["b", "missing", "a"]);
   });
 
-  it.each([null, [] as string[]])(
+  // Bun spreads every array row into arguments (vitest only does when all rows
+  // are arrays), so wrap each case to pass the empty array itself.
+  it.each([[null], [[] as string[]]])(
     "clears multi-selection with %j only once",
     (input) => {
       const tree = renderTree({
@@ -125,10 +124,7 @@ describe("TreeView callbacks and controlled state", () => {
       act(() => tree.props.onSelectedItemsChange!(null, input));
       act(() => tree.props.onSelectedItemsChange!(null, input));
       expect(tree.props.selectedItems).toEqual([]);
-      expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
-        "selected_items",
-        [],
-      );
+      expect(tree.setStateValue.mock.calls).toEqual([["selected_items", []]]);
     },
   );
 
@@ -136,10 +132,9 @@ describe("TreeView callbacks and controlled state", () => {
     const tree = renderTree({ multiSelect: true });
     act(() => tree.props.onSelectedItemsChange!(null, ["b", "a", "b"]));
     expect(tree.props.selectedItems).toEqual(["b", "a"]);
-    expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
-      "selected_items",
-      ["b", "a"],
-    );
+    expect(tree.setStateValue.mock.calls).toEqual([
+      ["selected_items", ["b", "a"]],
+    ]);
     act(() => tree.props.onExpandedItemsChange!(null, ["a", "a"]));
     expect(tree.props.expandedItems).toEqual(["a"]);
     expect(tree.setStateValue).toHaveBeenLastCalledWith("expanded_items", [
@@ -154,10 +149,7 @@ describe("TreeView callbacks and controlled state", () => {
     act(() => tree.props.onSelectedItemsChange!(null, "b"));
     act(() => tree.props.onSelectedItemsChange!(null, ["b"]));
     expect(tree.props.selectedItems).toBe("b");
-    expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
-      "selected_items",
-      ["b"],
-    );
+    expect(tree.setStateValue.mock.calls).toEqual([["selected_items", ["b"]]]);
   });
 
   it("filters expansion IDs without mutation and suppresses duplicate callbacks", () => {
@@ -167,10 +159,7 @@ describe("TreeView callbacks and controlled state", () => {
     act(() => tree.props.onExpandedItemsChange!(null, ["a"]));
     expect(tree.props.expandedItems).toEqual(["a"]);
     expect(input).toEqual(["missing", "a"]);
-    expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
-      "expanded_items",
-      ["a"],
-    );
+    expect(tree.setStateValue.mock.calls).toEqual([["expanded_items", ["a"]]]);
   });
 
   it("ignores unchanged initial expansion and emits clearing only once", () => {
@@ -180,10 +169,7 @@ describe("TreeView callbacks and controlled state", () => {
     act(() => tree.props.onExpandedItemsChange!(null, []));
     act(() => tree.props.onExpandedItemsChange!(null, []));
     expect(tree.props.expandedItems).toEqual([]);
-    expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
-      "expanded_items",
-      [],
-    );
+    expect(tree.setStateValue.mock.calls).toEqual([["expanded_items", []]]);
   });
 
   it("preserves user state for unchanged defaults and reconciles changed defaults", () => {
@@ -226,10 +212,7 @@ describe("TreeView callbacks and controlled state", () => {
     tree.update({ disabled: false });
     act(() => tree.props.onSelectedItemsChange!(null, "a"));
     expect(tree.props.selectedItems).toBe("a");
-    expect(tree.setStateValue).toHaveBeenCalledExactlyOnceWith(
-      "selected_items",
-      ["a"],
-    );
+    expect(tree.setStateValue.mock.calls).toEqual([["selected_items", ["a"]]]);
   });
 
   it("forwards presentation props and renders the label", () => {

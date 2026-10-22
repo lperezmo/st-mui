@@ -410,12 +410,14 @@ git clone https://github.com/lperezmo/st-mui.git
 cd st-mui
 uv sync --dev
 
-# Build frontend
+# Build frontend (needs bun; fmt and lint need bun canary until they ship in a stable release)
 cd st_mui/frontend
-npm install
-npm test
-npm run typecheck
-npm run build
+bun install
+bun test
+bun run typecheck
+bun fmt --check .
+bun lint
+bun run build
 cd ../..
 
 # Run Python tests

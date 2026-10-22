@@ -18,7 +18,7 @@
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "jsx": "react-jsx",
-    "types": ["vite/client", "vitest/globals", "node"]
+    "types": ["vite/client", "bun"]
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "scripts"]
 }

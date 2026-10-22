@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import dayjs from "dayjs";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, mock } from "bun:test";
 
 import {
   getDateRangeBounds,
@@ -17,7 +17,7 @@ import {
 
 describe("MIT Community range picker state", () => {
   it("syncs externally changed ranges without firing interaction callbacks", () => {
-    const setStateValue = vi.fn();
+    const setStateValue = mock();
 
     const dates = syncExternalDateRangeValue(
       { start_date: "2026-08-02", end_date: "2026-08-06" },
@@ -51,8 +51,8 @@ describe("MIT Community range picker state", () => {
   });
 
   it("commits an ordered date edit with one composite callback", () => {
-    const setStateValue = vi.fn();
-    const setTriggerValue = vi.fn();
+    const setStateValue = mock();
+    const setTriggerValue = mock();
 
     expect(
       updateDateRangeState(
@@ -65,7 +65,7 @@ describe("MIT Community range picker state", () => {
       ["start_date", "2026-08-01"],
       ["end_date", "2026-08-05"],
     ]);
-    expect(setTriggerValue).toHaveBeenCalledOnce();
+    expect(setTriggerValue).toHaveBeenCalledTimes(1);
     expect(setTriggerValue).toHaveBeenCalledWith("range", {
       start_date: "2026-08-01",
       end_date: "2026-08-05",
@@ -73,8 +73,8 @@ describe("MIT Community range picker state", () => {
   });
 
   it("supports clearing while deduplicating unchanged date edits", () => {
-    const setStateValue = vi.fn();
-    const setTriggerValue = vi.fn();
+    const setStateValue = mock();
+    const setTriggerValue = mock();
     const previous = {
       start_date: null,
       end_date: "2026-08-05",
@@ -99,12 +99,12 @@ describe("MIT Community range picker state", () => {
         previous,
       ),
     ).toBe(true);
-    expect(setTriggerValue).toHaveBeenCalledOnce();
+    expect(setTriggerValue).toHaveBeenCalledTimes(1);
   });
 
   it("rejects invalid and reversed date edits", () => {
-    const setStateValue = vi.fn();
-    const setTriggerValue = vi.fn();
+    const setStateValue = mock();
+    const setTriggerValue = mock();
 
     expect(
       updateDateRangeState(
@@ -162,8 +162,8 @@ describe("MIT Community range picker state", () => {
   });
 
   it("commits wall-clock datetimes and clears them", () => {
-    const setStateValue = vi.fn();
-    const setTriggerValue = vi.fn();
+    const setStateValue = mock();
+    const setTriggerValue = mock();
 
     expect(
       updateDateTimeRangeState(
@@ -176,7 +176,7 @@ describe("MIT Community range picker state", () => {
       ["start_datetime", "2026-08-01T09:15:00.000"],
       ["end_datetime", "2026-08-01T10:45:00.000"],
     ]);
-    expect(setTriggerValue).toHaveBeenCalledOnce();
+    expect(setTriggerValue).toHaveBeenCalledTimes(1);
 
     setStateValue.mockClear();
     setTriggerValue.mockClear();
@@ -190,8 +190,8 @@ describe("MIT Community range picker state", () => {
   });
 
   it("rejects reversed, invalid, and duplicate datetime edits", () => {
-    const setStateValue = vi.fn();
-    const setTriggerValue = vi.fn();
+    const setStateValue = mock();
+    const setTriggerValue = mock();
     const previous = {
       start_datetime: "2026-08-01T09:00:00.000",
       end_datetime: "2026-08-01T10:00:00.000",

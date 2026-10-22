@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, mock, setSystemTime } from "bun:test";
 
 import {
   nextDatePickerStateValue,
@@ -53,15 +53,14 @@ describe("picker value serialization", () => {
   });
 
   it("anchors time-only values to today for past/future validation", () => {
-    vi.useFakeTimers();
     try {
-      vi.setSystemTime(new Date("2026-08-03T12:00:00"));
+      setSystemTime(new Date("2026-08-03T12:00:00"));
       const parsed = parseTimePickerValue("09:05:07");
 
       expect(parsed?.format("YYYY-MM-DD")).toBe("2026-08-03");
       expect(parsed?.format("HH:mm:ss")).toBe("09:05:07");
     } finally {
-      vi.useRealTimers();
+      setSystemTime();
     }
   });
 
@@ -89,9 +88,9 @@ describe("picker value serialization", () => {
 
 describe("external picker value synchronization", () => {
   it("updates both the displayed single-picker value and Streamlit state", () => {
-    const setDateState = vi.fn();
-    const setTimeState = vi.fn();
-    const setDateTimeState = vi.fn();
+    const setDateState = mock();
+    const setTimeState = mock();
+    const setDateTimeState = mock();
 
     expect(
       syncExternalDatePickerValue("2026-08-04", setDateState)?.format(

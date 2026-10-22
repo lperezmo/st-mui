@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, mock } from "bun:test";
 import {
   commitSliderValue,
   getSliderAriaLabel,
@@ -31,7 +31,7 @@ describe("slider state helpers", () => {
   });
 
   it("commits a cloned value under the callback state key", () => {
-    const setStateValue = vi.fn();
+    const setStateValue = mock();
     const range = [3, 7];
 
     commitSliderValue(setStateValue, range);
