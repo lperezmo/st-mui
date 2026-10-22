@@ -96,3 +96,29 @@ version = "0.4.0"
         match=r"uv\.lock st-mui version '0\.4\.0' does not match project version 0\.5\.0",
     ):
         assert_lock_security()
+
+
+@pytest.mark.skipif(not HAS_TOMLLIB, reason="lock guard runs in Python 3.13 CI jobs")
+def test_lock_guard_floors(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from scripts.assert_lock_security import main as assert_lock_security
+
+    (tmp_path / "st_mui").mkdir()
+    project = '[project]\nname = "st-mui"\nversion = "0.5.0"\n'
+    (tmp_path / "pyproject.toml").write_text(project, encoding="utf-8")
+    (tmp_path / "st_mui/pyproject.toml").write_text(project, encoding="utf-8")
+    lock = tmp_path / "uv.lock"
+    monkeypatch.chdir(tmp_path)
+
+    # Packages absent from the resolution pass; a present one below its floor fails.
+    lock.write_text(
+        'version = 1\n\n[[package]]\nname = "st-mui"\nversion = "0.5.0"\n',
+        encoding="utf-8",
+    )
+    assert_lock_security()
+
+    with lock.open("a", encoding="utf-8") as handle:
+        handle.write('\n[[package]]\nname = "tornado"\nversion = "6.5.7"\n')
+    with pytest.raises(
+        SystemExit, match=r"tornado 6\.5\.7 is below the secure floor 6\.5\.8"
+    ):
+        assert_lock_security()

@@ -25,7 +25,7 @@
 
   <a href="https://pypi.org/project/st-mui/"><img src="https://img.shields.io/pypi/v/st-mui" alt="PyPI version"></a>
   <a href="https://pypistats.org/packages/st-mui"><img src="https://img.shields.io/pypi/dm/st-mui" alt="Downloads"></a>
-  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%E2%89%A53.10-blue" alt="Python ≥3.10"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-%E2%89%A53.11-blue" alt="Python ≥3.11"></a>
   <a href="https://github.com/lperezmo/st-mui/blob/main/LICENSE"><img src="https://img.shields.io/github/license/lperezmo/st-mui" alt="License"></a>
   <br>
   <a href="https://st-mui.streamlit.app/"><img src="https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white" alt="Open in Streamlit"></a>
@@ -132,7 +132,7 @@ grid_state = data_grid(
 - Date-time pickers represent browser-local wall-clock values and return
   timezone-naive Python `datetime` objects. This avoids silently shifting a
   selected time to UTC and works consistently on every supported Python
-  version, including Python 3.10. Any timezone information on input values is
+  version. Any timezone information on input values is
   intentionally ignored.
 - The range picker `on_change` callback runs once when either the start or end
   value changes.
