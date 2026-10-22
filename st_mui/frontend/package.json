@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node build.mjs",
-    "build:dev": "cross-env NODE_ENV=development node build.mjs",
-    "dev": "cross-env NODE_ENV=development node build.mjs --watch",
-    "test": "vitest run",
+    "build": "bun build.mjs",
+    "build:dev": "NODE_ENV=development bun build.mjs",
+    "dev": "NODE_ENV=development bun build.mjs --watch",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"test/**/*.ts\" build.mjs",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"test/**/*.ts\" build.mjs"
+    "check": "bun fmt --check . && bun lint --max-warnings 0 && bun run typecheck && bun test"
   },
+  "packageManager": "bun@1.4.2",
   "dependencies": {
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
@@ -26,18 +26,14 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^21.0.4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
-    "@types/node": "^22.14.1",
+    "@types/bun": "1.4.2",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
     "@vitejs/plugin-react": "^6.0.3",
-    "cross-env": "^10.1.0",
-    "jsdom": "^29.1.1",
-    "prettier": "^3.6.2",
-    "rimraf": "^6.1.0",
     "typescript": "^5.8.3",
-    "vite": "^8.1.4",
-    "vitest": "^4.1.11"
+    "vite": "^8.1.4"
   }
 }

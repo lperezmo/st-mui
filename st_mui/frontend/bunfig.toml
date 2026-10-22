@@ -1,0 +1,16 @@
+[test]
+# tree-view.test.ts renders through React Testing Library, which needs a DOM
+# before it is imported. bun test has no per-file environment switch, so
+# register happy-dom for the whole run; the other suites only use plain
+# functions, and theme.test.ts swaps its own document/window stubs in and out.
+preload = ["./test/setup-dom.ts"]
+
+[fmt]
+# "auto" keeps CRLF working trees on Windows passing the check while CI checks
+# out LF, the same reason the old Prettier config used it.
+endOfLine = "auto"
+
+[lint]
+
+[lint.rules]
+"eqeqeq" = ["error", "smart"]

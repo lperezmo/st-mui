@@ -4,7 +4,7 @@
 # Each component's production build is one fully minified index-*.js entry.
 # Vite's transform minifier and Rolldown's output minifier are both required:
 # transform-only output contains `//#region node_modules/` annotations and is
-# materially larger. Run this after `npm run build` in every packaging path.
+# materially larger. Run this after `bun run build` in every packaging path.
 set -euo pipefail
 
 LIMIT_BYTES=1048576       # 1 MiB per component
@@ -59,7 +59,7 @@ done
 
 if grep -REq \
   '@mui/x-date-pickers-pro|@mui/x-license|__MUI_LICENSE_INFO__' \
-  st_mui/frontend/src st_mui/frontend/package.json st_mui/frontend/package-lock.json; then
+  st_mui/frontend/src st_mui/frontend/package.json st_mui/frontend/bun.lock; then
   echo "FAIL: frontend sources or dependency manifests still reference the commercial MUI runtime" >&2
   fail=1
 fi

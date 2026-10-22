@@ -1,5 +1,32 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "bun:test";
 import { getStreamlitMuiTheme } from "../src/shared/theme";
+
+// bun:test has no vi.stubGlobal, so keep the original descriptors and put them
+// back after each test. The DOM preload defines these globals, so restoring
+// them matters for the suites that run after this one.
+const stubbedGlobals = new Map<string, PropertyDescriptor | undefined>();
+
+function stubGlobal(name: string, value: unknown) {
+  if (!stubbedGlobals.has(name)) {
+    stubbedGlobals.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
+  }
+  Object.defineProperty(globalThis, name, {
+    configurable: true,
+    writable: true,
+    value,
+  });
+}
+
+function unstubAllGlobals() {
+  for (const [name, descriptor] of stubbedGlobals) {
+    if (descriptor) {
+      Object.defineProperty(globalThis, name, descriptor);
+    } else {
+      delete (globalThis as Record<string, unknown>)[name];
+    }
+  }
+  stubbedGlobals.clear();
+}
 
 /**
  * Streamlit declares its --st-* custom properties on a generated class on the
@@ -14,8 +41,8 @@ function stubScopedTheme(
   const host = { __host: true } as unknown as Element;
   const documentElement = { __root: true };
 
-  vi.stubGlobal("document", { documentElement, body: {} });
-  vi.stubGlobal("getComputedStyle", (el: unknown) => {
+  stubGlobal("document", { documentElement, body: {} });
+  stubGlobal("getComputedStyle", (el: unknown) => {
     const scoped = el === host;
     return {
       backgroundColor: scoped ? hostBackground : "rgba(0, 0, 0, 0)",
@@ -23,14 +50,14 @@ function stubScopedTheme(
         scoped ? (hostVars[name] ?? "") : "",
     };
   });
-  vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
+  stubGlobal("window", { matchMedia: () => ({ matches: false }) });
 
   return host;
 }
 
 describe("Streamlit MUI theme", () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
+    unstubAllGlobals();
   });
 
   it("uses a concrete background color that DataGrid can decompose", () => {
@@ -94,7 +121,7 @@ describe("Streamlit MUI theme", () => {
     );
     expect(first.palette.text.primary).toBe("#0f172a");
 
-    vi.unstubAllGlobals();
+    unstubAllGlobals();
     const second = getStreamlitMuiTheme(
       stubScopedTheme({ ...base, "--st-text-color": "#334155" }),
     );

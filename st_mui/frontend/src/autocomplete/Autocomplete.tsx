@@ -29,10 +29,7 @@ export type AutocompleteData = {
 };
 
 type Selection =
-  | AutocompleteOption
-  | string
-  | (AutocompleteOption | string)[]
-  | null;
+  AutocompleteOption | string | (AutocompleteOption | string)[] | null;
 
 type Props = {
   data: AutocompleteData;
