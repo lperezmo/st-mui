@@ -410,7 +410,7 @@ git clone https://github.com/lperezmo/st-mui.git
 cd st-mui
 uv sync --dev
 
-# Build frontend (needs bun; fmt and lint need bun canary until they ship in a stable release)
+# Build frontend (needs bun 1.4.4+; lint needs bun canary until it ships in a stable release)
 cd st_mui/frontend
 bun install
 bun test
